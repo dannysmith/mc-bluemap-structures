@@ -1,0 +1,102 @@
+package dev.danny.bluemapstructures;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+
+public class StructureLocator {
+
+    public record StructurePos(int blockX, int blockZ, StructureType type) {}
+
+    public static List<StructurePos> findStructures(StructureType type, long worldSeed, int radiusBlocks) {
+        if (type == StructureType.STRONGHOLD) {
+            return StrongholdLocator.findStrongholds(worldSeed, radiusBlocks);
+        }
+
+        // Fortress and Bastion share a grid — handle together
+        if (type == StructureType.FORTRESS || type == StructureType.BASTION) {
+            return findNetherComplex(type, worldSeed, radiusBlocks);
+        }
+
+        List<StructurePos> results = new ArrayList<>();
+        int spacing = type.spacing;
+        int radiusChunks = radiusBlocks / 16;
+        int regionMin = Math.floorDiv(-radiusChunks, spacing) - 1;
+        int regionMax = Math.floorDiv(radiusChunks, spacing) + 1;
+
+        for (int regionX = regionMin; regionX <= regionMax; regionX++) {
+            for (int regionZ = regionMin; regionZ <= regionMax; regionZ++) {
+                int[] chunk = getStructureChunk(type, worldSeed, regionX, regionZ);
+                int blockX = chunk[0] * 16 + 8;
+                int blockZ = chunk[1] * 16 + 8;
+
+                if (Math.abs(blockX) <= radiusBlocks && Math.abs(blockZ) <= radiusBlocks) {
+                    results.add(new StructurePos(blockX, blockZ, type));
+                }
+            }
+        }
+
+        return results;
+    }
+
+    private static int[] getStructureChunk(StructureType type, long worldSeed, int regionX, int regionZ) {
+        long regionSeed = (long) regionX * 341873128712L
+                + (long) regionZ * 132897987541L
+                + worldSeed
+                + (long) type.salt;
+        Random rand = new Random(regionSeed);
+
+        int range = type.spacing - type.separation;
+        int chunkX, chunkZ;
+
+        if (type.spreadType == StructureType.SpreadType.TRIANGULAR) {
+            chunkX = regionX * type.spacing + (rand.nextInt(range) + rand.nextInt(range)) / 2;
+            chunkZ = regionZ * type.spacing + (rand.nextInt(range) + rand.nextInt(range)) / 2;
+        } else {
+            chunkX = regionX * type.spacing + rand.nextInt(range);
+            chunkZ = regionZ * type.spacing + rand.nextInt(range);
+        }
+
+        return new int[]{chunkX, chunkZ};
+    }
+
+    private static List<StructurePos> findNetherComplex(StructureType requested, long worldSeed, int radiusBlocks) {
+        List<StructurePos> results = new ArrayList<>();
+        int spacing = 27;
+        int separation = 4;
+        int salt = 30084232;
+        int radiusChunks = radiusBlocks / 16;
+        int regionMin = Math.floorDiv(-radiusChunks, spacing) - 1;
+        int regionMax = Math.floorDiv(radiusChunks, spacing) + 1;
+
+        for (int regionX = regionMin; regionX <= regionMax; regionX++) {
+            for (int regionZ = regionMin; regionZ <= regionMax; regionZ++) {
+                long regionSeed = (long) regionX * 341873128712L
+                        + (long) regionZ * 132897987541L
+                        + worldSeed
+                        + (long) salt;
+                Random rand = new Random(regionSeed);
+
+                int range = spacing - separation;
+                int chunkX = regionX * spacing + rand.nextInt(range);
+                int chunkZ = regionZ * spacing + rand.nextInt(range);
+
+                // Weight roll: fortress=2, bastion=3 (total=5)
+                int roll = rand.nextInt(5);
+                boolean isFortress = roll < 2;
+
+                StructureType actualType = isFortress ? StructureType.FORTRESS : StructureType.BASTION;
+                if (actualType != requested) continue;
+
+                int blockX = chunkX * 16 + 8;
+                int blockZ = chunkZ * 16 + 8;
+
+                if (Math.abs(blockX) <= radiusBlocks && Math.abs(blockZ) <= radiusBlocks) {
+                    results.add(new StructurePos(blockX, blockZ, actualType));
+                }
+            }
+        }
+
+        return results;
+    }
+}

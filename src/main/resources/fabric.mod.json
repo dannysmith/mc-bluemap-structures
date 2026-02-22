@@ -1,0 +1,21 @@
+{
+    "schemaVersion": 1,
+    "id": "bluemap-structures",
+    "version": "${version}",
+    "name": "BlueMap Structure Markers",
+    "description": "Adds Chunkbase-style toggleable structure markers to BlueMap",
+    "authors": ["danny"],
+    "license": "MIT",
+    "environment": "server",
+    "entrypoints": {
+        "main": ["dev.danny.bluemapstructures.BlueMapStructuresMod"]
+    },
+    "depends": {
+        "fabricloader": ">=0.16.0",
+        "fabric-api": "*",
+        "minecraft": "~1.21.1"
+    },
+    "suggests": {
+        "bluemap": ">=5.0"
+    }
+}
