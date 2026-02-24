@@ -43,3 +43,13 @@ jar {
         rename { "${it}_${project.archives_base_name}" }
     }
 }
+
+tasks.register("testPositions", JavaExec) {
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = "dev.danny.bluemapstructures.TestPositions"
+}
+
+tasks.register("testVsMC", JavaExec) {
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = "dev.danny.bluemapstructures.TestAgainstMinecraft"
+}
