@@ -84,7 +84,7 @@ public enum StructureType {
                     "has_structure/village_taiga"
             );
             case DESERT_PYRAMID -> List.of("has_structure/desert_pyramid");
-            case JUNGLE_TEMPLE -> List.of("has_structure/jungle_pyramid");
+            case JUNGLE_TEMPLE -> List.of("has_structure/jungle_temple");
             case SWAMP_HUT -> List.of("has_structure/swamp_hut");
             case IGLOO -> List.of("has_structure/igloo");
             case PILLAGER_OUTPOST -> List.of("has_structure/pillager_outpost");
@@ -93,9 +93,9 @@ public enum StructureType {
             case TRIAL_CHAMBERS -> List.of("has_structure/trial_chambers");
             case OCEAN_RUIN -> List.of("has_structure/ocean_ruin_cold", "has_structure/ocean_ruin_warm");
             case SHIPWRECK -> List.of("has_structure/shipwreck", "has_structure/shipwreck_beached");
-            case MONUMENT -> List.of("has_structure/monument");
-            case MANSION -> List.of("has_structure/mansion");
-            case FORTRESS -> List.of("has_structure/fortress");
+            case MONUMENT -> List.of("has_structure/ocean_monument");
+            case MANSION -> List.of("has_structure/woodland_mansion");
+            case FORTRESS -> List.of("has_structure/nether_fortress");
             case BASTION -> List.of("has_structure/bastion_remnant");
             case END_CITY -> List.of("has_structure/end_city");
             // Skip biome checking — spawns in many biomes or uses special placement
