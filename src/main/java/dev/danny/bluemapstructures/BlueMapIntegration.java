@@ -4,26 +4,40 @@ import de.bluecolored.bluemap.api.BlueMapAPI;
 import de.bluecolored.bluemap.api.BlueMapMap;
 import de.bluecolored.bluemap.api.markers.MarkerSet;
 import de.bluecolored.bluemap.api.markers.POIMarker;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.world.ServerWorld;
+import net.minecraft.world.World;
 
+import java.util.EnumMap;
 import java.util.List;
+import java.util.Map;
 
 public class BlueMapIntegration {
 
-    public static void register(long worldSeed, ModConfig config) {
+    public static void register(MinecraftServer server, long worldSeed, ModConfig config) {
         BlueMapAPI.onEnable(api -> {
             BlueMapStructuresMod.LOGGER.info("BlueMap API enabled, creating structure markers...");
-            createMarkers(api, worldSeed, config);
+            createMarkers(api, server, worldSeed, config);
         });
     }
 
-    private static void createMarkers(BlueMapAPI api, long worldSeed, ModConfig config) {
+    private static void createMarkers(BlueMapAPI api, MinecraftServer server, long worldSeed, ModConfig config) {
+        Map<StructureType.Dimension, BiomeValidator> validators = new EnumMap<>(StructureType.Dimension.class);
+        for (StructureType.Dimension dim : StructureType.Dimension.values()) {
+            ServerWorld world = getServerWorld(server, dim);
+            if (world != null) {
+                validators.put(dim, new BiomeValidator(world));
+            }
+        }
+
         int totalMarkers = 0;
 
         for (StructureType type : StructureType.values()) {
             if (!config.isEnabled(type)) continue;
 
+            BiomeValidator validator = validators.get(type.dimension);
             List<StructureLocator.StructurePos> positions =
-                    StructureLocator.findStructures(type, worldSeed, config.radiusBlocks);
+                    StructureLocator.findStructures(type, worldSeed, config.radiusBlocks, validator);
 
             if (positions.isEmpty()) continue;
 
@@ -59,6 +73,14 @@ public class BlueMapIntegration {
         }
 
         BlueMapStructuresMod.LOGGER.info("BlueMap structure markers created: {} total", totalMarkers);
+    }
+
+    private static ServerWorld getServerWorld(MinecraftServer server, StructureType.Dimension dimension) {
+        return switch (dimension) {
+            case OVERWORLD -> server.getOverworld();
+            case NETHER -> server.getWorld(World.NETHER);
+            case END -> server.getWorld(World.END);
+        };
     }
 
     private static boolean matchesDimension(String worldId, StructureType.Dimension dimension) {

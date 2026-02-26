@@ -23,7 +23,7 @@ public class BlueMapStructuresMod implements ModInitializer {
             Path configDir = FabricLoader.getInstance().getConfigDir();
             ModConfig config = ModConfig.load(configDir);
 
-            BlueMapIntegration.register(worldSeed, config);
+            BlueMapIntegration.register(server, worldSeed, config);
         });
     }
 }

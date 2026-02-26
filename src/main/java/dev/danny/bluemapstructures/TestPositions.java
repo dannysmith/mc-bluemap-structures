@@ -35,7 +35,7 @@ public class TestPositions {
 
         for (StructureType type : testTypes) {
             List<StructureLocator.StructurePos> positions =
-                    StructureLocator.findStructures(type, seed, radius);
+                    StructureLocator.findStructures(type, seed, radius, null);
 
             // Sort by distance from origin for easy comparison
             positions.sort(Comparator.comparingDouble(p ->

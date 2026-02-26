@@ -8,14 +8,15 @@ public class StructureLocator {
 
     public record StructurePos(int blockX, int blockZ, StructureType type) {}
 
-    public static List<StructurePos> findStructures(StructureType type, long worldSeed, int radiusBlocks) {
+    public static List<StructurePos> findStructures(StructureType type, long worldSeed, int radiusBlocks,
+                                                     BiomeValidator validator) {
         if (type == StructureType.STRONGHOLD) {
             return StrongholdLocator.findStrongholds(worldSeed, radiusBlocks);
         }
 
         // Fortress and Bastion share a grid — handle together
         if (type == StructureType.FORTRESS || type == StructureType.BASTION) {
-            return findNetherComplex(type, worldSeed, radiusBlocks);
+            return findNetherComplex(type, worldSeed, radiusBlocks, validator);
         }
 
         List<StructurePos> results = new ArrayList<>();
@@ -31,7 +32,9 @@ public class StructureLocator {
                 int blockZ = chunk[1] * 16 + 8;
 
                 if (Math.abs(blockX) <= radiusBlocks && Math.abs(blockZ) <= radiusBlocks) {
-                    results.add(new StructurePos(blockX, blockZ, type));
+                    if (validator == null || validator.isValidPosition(type, blockX, blockZ)) {
+                        results.add(new StructurePos(blockX, blockZ, type));
+                    }
                 }
             }
         }
@@ -60,7 +63,8 @@ public class StructureLocator {
         return new int[]{chunkX, chunkZ};
     }
 
-    private static List<StructurePos> findNetherComplex(StructureType requested, long worldSeed, int radiusBlocks) {
+    private static List<StructurePos> findNetherComplex(StructureType requested, long worldSeed, int radiusBlocks,
+                                                        BiomeValidator validator) {
         List<StructurePos> results = new ArrayList<>();
         int spacing = 27;
         int separation = 4;
@@ -92,7 +96,9 @@ public class StructureLocator {
                 int blockZ = chunkZ * 16 + 8;
 
                 if (Math.abs(blockX) <= radiusBlocks && Math.abs(blockZ) <= radiusBlocks) {
-                    results.add(new StructurePos(blockX, blockZ, actualType));
+                    if (validator == null || validator.isValidPosition(actualType, blockX, blockZ)) {
+                        results.add(new StructurePos(blockX, blockZ, actualType));
+                    }
                 }
             }
         }

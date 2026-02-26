@@ -1,5 +1,7 @@
 package dev.danny.bluemapstructures;
 
+import java.util.List;
+
 public enum StructureType {
     // Overworld - Linear spread
     VILLAGE(34, 8, 10387312, SpreadType.LINEAR, Dimension.OVERWORLD),
@@ -65,6 +67,39 @@ public enum StructureType {
             case RUINED_PORTAL_NETHER -> "Ruined Portals (Nether)";
             case END_CITY -> "End Cities";
             case STRONGHOLD -> "Strongholds";
+        };
+    }
+
+    /**
+     * Returns biome tag paths (e.g. "has_structure/village_plains") that this structure
+     * can spawn in. Empty list means skip biome checking (structure spawns in many biomes).
+     */
+    public List<String> biomeTagIds() {
+        return switch (this) {
+            case VILLAGE -> List.of(
+                    "has_structure/village_plains",
+                    "has_structure/village_desert",
+                    "has_structure/village_savanna",
+                    "has_structure/village_snowy",
+                    "has_structure/village_taiga"
+            );
+            case DESERT_PYRAMID -> List.of("has_structure/desert_pyramid");
+            case JUNGLE_TEMPLE -> List.of("has_structure/jungle_pyramid");
+            case SWAMP_HUT -> List.of("has_structure/swamp_hut");
+            case IGLOO -> List.of("has_structure/igloo");
+            case PILLAGER_OUTPOST -> List.of("has_structure/pillager_outpost");
+            case ANCIENT_CITY -> List.of("has_structure/ancient_city");
+            case TRAIL_RUINS -> List.of("has_structure/trail_ruins");
+            case TRIAL_CHAMBERS -> List.of("has_structure/trial_chambers");
+            case OCEAN_RUIN -> List.of("has_structure/ocean_ruin_cold", "has_structure/ocean_ruin_warm");
+            case SHIPWRECK -> List.of("has_structure/shipwreck", "has_structure/shipwreck_beached");
+            case MONUMENT -> List.of("has_structure/monument");
+            case MANSION -> List.of("has_structure/mansion");
+            case FORTRESS -> List.of("has_structure/fortress");
+            case BASTION -> List.of("has_structure/bastion_remnant");
+            case END_CITY -> List.of("has_structure/end_city");
+            // Skip biome checking — spawns in many biomes or uses special placement
+            case RUINED_PORTAL_OW, RUINED_PORTAL_NETHER, STRONGHOLD -> List.of();
         };
     }
 
