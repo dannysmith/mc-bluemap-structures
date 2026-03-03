@@ -25,5 +25,9 @@ public class BlueMapStructuresMod implements ModInitializer {
 
             BlueMapIntegration.register(server, worldSeed, config);
         });
+
+        ServerLifecycleEvents.SERVER_STOPPING.register(server -> {
+            BlueMapIntegration.unregister();
+        });
     }
 }

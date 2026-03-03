@@ -8,17 +8,54 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.world.World;
 
+import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
 public class BlueMapIntegration {
 
+    private static Consumer<BlueMapAPI> enableListener;
+    private static Consumer<BlueMapAPI> disableListener;
+    private static final List<String> registeredMarkerSetIds = new ArrayList<>();
+
     public static void register(MinecraftServer server, long worldSeed, ModConfig config) {
-        BlueMapAPI.onEnable(api -> {
+        unregister();
+
+        enableListener = api -> {
             BlueMapStructuresMod.LOGGER.info("BlueMap API enabled, creating structure markers...");
             createMarkers(api, server, worldSeed, config);
-        });
+        };
+
+        disableListener = api -> {
+            BlueMapStructuresMod.LOGGER.info("BlueMap API disabling, removing structure markers...");
+            removeMarkers(api);
+        };
+
+        BlueMapAPI.onEnable(enableListener);
+        BlueMapAPI.onDisable(disableListener);
+    }
+
+    public static void unregister() {
+        if (enableListener != null) {
+            BlueMapAPI.unregisterListener(enableListener);
+            enableListener = null;
+        }
+        if (disableListener != null) {
+            BlueMapAPI.unregisterListener(disableListener);
+            disableListener = null;
+        }
+        registeredMarkerSetIds.clear();
+    }
+
+    private static void removeMarkers(BlueMapAPI api) {
+        for (BlueMapMap map : api.getMaps()) {
+            for (String id : registeredMarkerSetIds) {
+                map.getMarkerSets().remove(id);
+            }
+        }
+        registeredMarkerSetIds.clear();
     }
 
     private static void createMarkers(BlueMapAPI api, MinecraftServer server, long worldSeed, ModConfig config) {
@@ -28,6 +65,10 @@ public class BlueMapIntegration {
             if (world != null) {
                 validators.put(dim, new BiomeValidator(world));
             }
+        }
+
+        for (BlueMapMap map : api.getMaps()) {
+            BlueMapStructuresMod.LOGGER.info("BlueMap map '{}' has world ID '{}'", map.getId(), map.getWorld().getId());
         }
 
         int totalMarkers = 0;
@@ -60,11 +101,13 @@ public class BlueMapIntegration {
                 );
             }
 
-            // Attach to matching dimension maps
+            String markerSetId = type.markerSetId();
+            registeredMarkerSetIds.add(markerSetId);
+
             for (BlueMapMap map : api.getMaps()) {
                 String worldId = map.getWorld().getId();
                 if (matchesDimension(worldId, type.dimension)) {
-                    map.getMarkerSets().put(type.markerSetId(), markerSet);
+                    map.getMarkerSets().put(markerSetId, markerSet);
                 }
             }
 
