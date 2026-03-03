@@ -17,14 +17,13 @@ public class StrongholdLocator {
         Random rand = new Random(worldSeed);
 
         int ringCount = SPREAD;
-        double ringDistance = 6.0 * DISTANCE;
         double angle = rand.nextDouble() * Math.PI * 2.0;
         int placed = 0;
         int ring = 0;
 
         for (int i = 0; i < COUNT; i++) {
-            double dist = (4.0 * ringDistance + ringDistance * ring * 6.0)
-                    + (rand.nextDouble() - 0.5) * ringDistance * 2.5;
+            double dist = (4.0 * DISTANCE + (double) DISTANCE * ring * 6.0)
+                    + (rand.nextDouble() - 0.5) * (double) DISTANCE * 2.5;
             int chunkX = (int) Math.round(Math.cos(angle) * dist);
             int chunkZ = (int) Math.round(Math.sin(angle) * dist);
 
