@@ -163,7 +163,7 @@ public class BlueMapIntegration {
   }
 
   private static void createSpawnMarker(BlueMapAPI api, MinecraftServer server) {
-    BlockPos spawn = server.getOverworld().getSpawnPos();
+    BlockPos spawn = server.getOverworld().getLevelProperties().getSpawnPos();
 
     String iconUrl = uploadIcon(api, "/icons/spawn.png", "structures/spawn.png");
 
