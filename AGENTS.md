@@ -1,3 +1,5 @@
+See @docs/tasks.md for task management
+
 # AI Agent Instructions
 
 ## Project
