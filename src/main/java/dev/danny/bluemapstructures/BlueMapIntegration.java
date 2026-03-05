@@ -77,8 +77,13 @@ public class BlueMapIntegration {
             if (!config.isEnabled(type)) continue;
 
             BiomeValidator validator = validators.get(type.dimension);
+            int effectiveRadius = switch (type.dimension) {
+                case NETHER -> config.radiusBlocks / 8;
+                case END -> config.radiusBlocks;
+                case OVERWORLD -> config.radiusBlocks;
+            };
             List<StructureLocator.StructurePos> positions =
-                    StructureLocator.findStructures(type, worldSeed, config.radiusBlocks, validator);
+                    StructureLocator.findStructures(type, worldSeed, effectiveRadius, validator);
 
             if (positions.isEmpty()) continue;
 
