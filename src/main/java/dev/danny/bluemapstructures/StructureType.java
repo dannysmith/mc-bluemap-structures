@@ -4,46 +4,51 @@ import java.util.List;
 
 public enum StructureType {
     // Overworld - Linear spread
-    VILLAGE(34, 8, 10387312, SpreadType.LINEAR, Dimension.OVERWORLD),
-    DESERT_PYRAMID(32, 8, 14357617, SpreadType.LINEAR, Dimension.OVERWORLD),
-    JUNGLE_TEMPLE(32, 8, 14357619, SpreadType.LINEAR, Dimension.OVERWORLD),
-    SWAMP_HUT(32, 8, 14357620, SpreadType.LINEAR, Dimension.OVERWORLD),
-    IGLOO(32, 8, 14357618, SpreadType.LINEAR, Dimension.OVERWORLD),
-    PILLAGER_OUTPOST(32, 8, 165745296, SpreadType.LINEAR, Dimension.OVERWORLD),
-    ANCIENT_CITY(24, 8, 20083232, SpreadType.LINEAR, Dimension.OVERWORLD),
-    TRAIL_RUINS(34, 8, 83469867, SpreadType.LINEAR, Dimension.OVERWORLD),
-    TRIAL_CHAMBERS(34, 12, 94251327, SpreadType.LINEAR, Dimension.OVERWORLD),
-    OCEAN_RUIN(20, 8, 14357621, SpreadType.LINEAR, Dimension.OVERWORLD),
-    SHIPWRECK(24, 4, 165745295, SpreadType.LINEAR, Dimension.OVERWORLD),
-    RUINED_PORTAL_OW(40, 15, 34222645, SpreadType.LINEAR, Dimension.OVERWORLD),
+    VILLAGE(34, 8, 10387312, SpreadType.LINEAR, Dimension.OVERWORLD, 1500, false),
+    DESERT_PYRAMID(32, 8, 14357617, SpreadType.LINEAR, Dimension.OVERWORLD, 1500, false),
+    JUNGLE_TEMPLE(32, 8, 14357619, SpreadType.LINEAR, Dimension.OVERWORLD, 1500, false),
+    SWAMP_HUT(32, 8, 14357620, SpreadType.LINEAR, Dimension.OVERWORLD, 1500, false),
+    IGLOO(32, 8, 14357618, SpreadType.LINEAR, Dimension.OVERWORLD, 1500, false),
+    PILLAGER_OUTPOST(32, 8, 165745296, SpreadType.LINEAR, Dimension.OVERWORLD, 1500, false),
+    ANCIENT_CITY(24, 8, 20083232, SpreadType.LINEAR, Dimension.OVERWORLD, 3000, false),
+    TRAIL_RUINS(34, 8, 83469867, SpreadType.LINEAR, Dimension.OVERWORLD, 3000, false),
+    TRIAL_CHAMBERS(34, 12, 94251327, SpreadType.LINEAR, Dimension.OVERWORLD, 3000, false),
+    OCEAN_RUIN(20, 8, 14357621, SpreadType.LINEAR, Dimension.OVERWORLD, 500, true),
+    SHIPWRECK(24, 4, 165745295, SpreadType.LINEAR, Dimension.OVERWORLD, 500, true),
+    RUINED_PORTAL_OW(40, 15, 34222645, SpreadType.LINEAR, Dimension.OVERWORLD, 1500, true),
 
     // Overworld - Triangular spread
-    MONUMENT(32, 5, 10387313, SpreadType.TRIANGULAR, Dimension.OVERWORLD),
-    MANSION(80, 20, 10387319, SpreadType.TRIANGULAR, Dimension.OVERWORLD),
+    MONUMENT(32, 5, 10387313, SpreadType.TRIANGULAR, Dimension.OVERWORLD, 1500, false),
+    MANSION(80, 20, 10387319, SpreadType.TRIANGULAR, Dimension.OVERWORLD, 10000, false),
 
     // Nether
-    FORTRESS(27, 4, 30084232, SpreadType.LINEAR, Dimension.NETHER),
-    BASTION(27, 4, 30084232, SpreadType.LINEAR, Dimension.NETHER),
-    RUINED_PORTAL_NETHER(25, 10, 34222645, SpreadType.LINEAR, Dimension.NETHER),
+    FORTRESS(27, 4, 30084232, SpreadType.LINEAR, Dimension.NETHER, 1500, false),
+    BASTION(27, 4, 30084232, SpreadType.LINEAR, Dimension.NETHER, 1500, false),
+    RUINED_PORTAL_NETHER(25, 10, 34222645, SpreadType.LINEAR, Dimension.NETHER, 1500, true),
 
     // End
-    END_CITY(20, 11, 10387313, SpreadType.TRIANGULAR, Dimension.END),
+    END_CITY(20, 11, 10387313, SpreadType.TRIANGULAR, Dimension.END, 10000, false),
 
     // Special
-    STRONGHOLD(0, 0, 0, SpreadType.CONCENTRIC_RINGS, Dimension.OVERWORLD);
+    STRONGHOLD(0, 0, 0, SpreadType.CONCENTRIC_RINGS, Dimension.OVERWORLD, 10000, false);
 
     public final int spacing;
     public final int separation;
     public final int salt;
     public final SpreadType spreadType;
     public final Dimension dimension;
+    public final int maxDistance;
+    public final boolean defaultHidden;
 
-    StructureType(int spacing, int separation, int salt, SpreadType spreadType, Dimension dimension) {
+    StructureType(int spacing, int separation, int salt, SpreadType spreadType, Dimension dimension,
+                  int maxDistance, boolean defaultHidden) {
         this.spacing = spacing;
         this.separation = separation;
         this.salt = salt;
         this.spreadType = spreadType;
         this.dimension = dimension;
+        this.maxDistance = maxDistance;
+        this.defaultHidden = defaultHidden;
     }
 
     public String displayName() {

@@ -85,7 +85,7 @@ public class BlueMapIntegration {
             MarkerSet markerSet = MarkerSet.builder()
                     .label(type.displayName())
                     .toggleable(true)
-                    .defaultHidden(false)
+                    .defaultHidden(type.defaultHidden)
                     .build();
 
             for (StructureLocator.StructurePos pos : positions) {
@@ -93,7 +93,7 @@ public class BlueMapIntegration {
                         .label(type.displayName())
                         .detail(type.displayName() + " (" + pos.blockX() + ", " + pos.blockZ() + ")")
                         .position((double) pos.blockX(), 64.0, (double) pos.blockZ())
-                        .maxDistance(10000)
+                        .maxDistance(type.maxDistance)
                         .build();
                 markerSet.getMarkers().put(
                         type.name().toLowerCase() + "_" + pos.blockX() + "_" + pos.blockZ(),
