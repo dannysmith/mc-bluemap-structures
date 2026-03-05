@@ -6,6 +6,11 @@ import java.util.Random;
 
 public class StructureLocator {
 
+  // Minecraft's region seed multipliers — used by ChunkRandom.setRegionSeed() to mix
+  // region coordinates into the seed. These are hardcoded constants in vanilla MC.
+  private static final long REGION_X_MULTIPLIER = 341873128712L;
+  private static final long REGION_Z_MULTIPLIER = 132897987541L;
+
   public record StructurePos(int blockX, int blockZ, StructureType type) {}
 
   public static List<StructurePos> findStructures(
@@ -45,8 +50,8 @@ public class StructureLocator {
   private static int[] getStructureChunk(
       StructureType type, long worldSeed, int regionX, int regionZ) {
     long regionSeed =
-        (long) regionX * 341873128712L
-            + (long) regionZ * 132897987541L
+        (long) regionX * REGION_X_MULTIPLIER
+            + (long) regionZ * REGION_Z_MULTIPLIER
             + worldSeed
             + (long) type.salt;
     Random rand = new Random(regionSeed);
