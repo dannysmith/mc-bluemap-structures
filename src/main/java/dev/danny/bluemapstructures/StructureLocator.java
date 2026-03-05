@@ -19,6 +19,10 @@ public class StructureLocator {
       return StrongholdLocator.findStrongholds(worldSeed, radiusBlocks);
     }
 
+    if (type == StructureType.BURIED_TREASURE) {
+      return BuriedTreasureLocator.findBuriedTreasure(worldSeed, radiusBlocks, validator);
+    }
+
     // Fortress and Bastion share a grid — handle together
     if (type == StructureType.FORTRESS || type == StructureType.BASTION) {
       return findNetherComplex(type, worldSeed, radiusBlocks, validator);

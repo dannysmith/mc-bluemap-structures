@@ -30,6 +30,7 @@ public enum StructureType {
   END_CITY(20, 11, 10387313, SpreadType.TRIANGULAR, Dimension.END, 5000, false),
 
   // Special
+  BURIED_TREASURE(1, 0, 10387320, SpreadType.LINEAR, Dimension.OVERWORLD, 300, true),
   STRONGHOLD(0, 0, 0, SpreadType.CONCENTRIC_RINGS, Dimension.OVERWORLD, 5000, false);
 
   public final int spacing;
@@ -77,6 +78,7 @@ public enum StructureType {
       case BASTION -> "Bastion Remnants";
       case RUINED_PORTAL_NETHER -> "Ruined Portals (Nether)";
       case END_CITY -> "End Cities";
+      case BURIED_TREASURE -> "Buried Treasure";
       case STRONGHOLD -> "Strongholds";
     };
   }
@@ -109,6 +111,7 @@ public enum StructureType {
       case FORTRESS -> List.of("has_structure/nether_fortress");
       case BASTION -> List.of("has_structure/bastion_remnant");
       case END_CITY -> List.of("has_structure/end_city");
+      case BURIED_TREASURE -> List.of("has_structure/buried_treasure");
       // Skip biome checking — spawns in many biomes or uses special placement
       case RUINED_PORTAL_OW, RUINED_PORTAL_NETHER, STRONGHOLD -> List.of();
     };
@@ -138,6 +141,7 @@ public enum StructureType {
       case BASTION -> "bastion.png";
       case RUINED_PORTAL_NETHER -> "ruined_portal_nether.png";
       case END_CITY -> "end_city.png";
+      case BURIED_TREASURE -> "treasure.png";
       case STRONGHOLD -> "stronghold.png";
     };
   }

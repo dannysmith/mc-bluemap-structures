@@ -95,6 +95,16 @@ class StructureLocatorTest {
   }
 
   @Test
+  void known_buried_treasure_positions() {
+    List<StructureLocator.StructurePos> positions =
+        StructureLocator.findStructures(StructureType.BURIED_TREASURE, SEED, RADIUS, null);
+    assertEquals(619, positions.size(), "Buried Treasure count for seed 12345, radius 2000");
+    assertContainsPosition(positions, -1991, -743);
+    assertContainsPosition(positions, -1975, -23);
+    assertContainsPosition(positions, -1975, 1977);
+  }
+
+  @Test
   void known_stronghold_positions() {
     List<StructureLocator.StructurePos> positions =
         StructureLocator.findStructures(StructureType.STRONGHOLD, SEED, RADIUS, null);
