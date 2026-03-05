@@ -12,6 +12,7 @@ public class ModConfig {
   private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
 
   public int radiusBlocks = 5000;
+  public boolean enableSpawn = true;
   public Map<String, Boolean> enabledStructures = new LinkedHashMap<>();
 
   public ModConfig() {

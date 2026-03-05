@@ -4,26 +4,11 @@
 Implementation task
 
 ## Summary
-Add markers for spawn point, buried treasure, and end ships (end cities with ships). Each phase uses a different approach. Icons for all four exist in `src/main/resources/icons/` but ancient city and end ship icons still need to be created/sourced (see Phase 1 notes).
+Add markers for buried treasure and end ships (end cities with ships). Each uses a different approach from the existing grid locator.
 
 ---
 
-## Phase 1: Spawn Point + Ancient City Icon
-
-### Spawn
-- Read spawn position directly from the server API — no algorithm needed
-- `server.getOverworld().getSpawnPos()` returns the exact spawn point
-- Available by the time `SERVER_STARTED` fires (which we already hook)
-- Create a single POI marker, not a full MarkerSet — there's only one spawn per world
-- Icon: `spawn.png`
-
-### Ancient City Icon
-- Ancient Cities are already fully implemented in `StructureType.java` (spacing=24, separation=8, salt=20083232, LINEAR spread) — confirmed correct against vanilla data
-- Just need to source/create the `ancient_city.png` icon — the current one needs replacing
-
----
-
-## Phase 2: Buried Treasure
+## Phase 1: Buried Treasure
 
 - Seed-deterministic but uses a **different algorithm** from the grid locator in `StructureLocator.java`
 - Every chunk is checked individually (spacing=1, separation=0) with a 1% probability roll
@@ -36,7 +21,7 @@ Add markers for spawn point, buried treasure, and end ships (end cities with shi
 
 ---
 
-## Phase 3: End Ship Detection
+## Phase 2: End Ship Detection
 
 - End Cities are already located by the grid algorithm
 - Whether a city has a ship is deterministic from `(worldSeed, chunkX, chunkZ)` — no world data needed
@@ -51,7 +36,5 @@ Add markers for spawn point, buried treasure, and end ships (end cities with shi
 ---
 
 ## Icons needed
-- `spawn.png` — exists, ready to use
-- `ancient_city.png` — exists but needs replacing with correct icon
 - `treasure.png` — exists, ready to use
 - `end_ship.png` — exists, ready to use

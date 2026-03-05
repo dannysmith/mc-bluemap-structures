@@ -12,6 +12,7 @@ import java.util.*;
 import java.util.function.Consumer;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
 public class BlueMapIntegration {
@@ -65,28 +66,10 @@ public class BlueMapIntegration {
   private static Map<StructureType, String> uploadIcons(BlueMapAPI api) {
     Map<StructureType, String> iconUrls = new EnumMap<>(StructureType.class);
 
-    // Upload each structure type's icon to every map, capture URL from the first map
     for (StructureType type : StructureType.values()) {
-      String resourcePath = "/icons/" + type.iconFile();
-      String assetName = "structures/" + type.iconFile();
-
-      for (BlueMapMap map : api.getMaps()) {
-        try (InputStream in = BlueMapIntegration.class.getResourceAsStream(resourcePath)) {
-          if (in == null) {
-            BlueMapStructuresMod.LOGGER.warn("Icon resource not found: {}", resourcePath);
-            break;
-          }
-          try (OutputStream out = map.getAssetStorage().writeAsset(assetName)) {
-            in.transferTo(out);
-          }
-          // Capture URL from first successful upload
-          if (!iconUrls.containsKey(type)) {
-            iconUrls.put(type, map.getAssetStorage().getAssetUrl(assetName));
-          }
-        } catch (IOException e) {
-          BlueMapStructuresMod.LOGGER.warn(
-              "Failed to upload icon for {}: {}", type.displayName(), e.getMessage());
-        }
+      String url = uploadIcon(api, "/icons/" + type.iconFile(), "structures/" + type.iconFile());
+      if (url != null) {
+        iconUrls.put(type, url);
       }
     }
 
@@ -171,7 +154,68 @@ public class BlueMapIntegration {
       BlueMapStructuresMod.LOGGER.info("Added {} {} markers", positions.size(), type.displayName());
     }
 
+    if (config.enableSpawn) {
+      createSpawnMarker(api, server);
+      totalMarkers++;
+    }
+
     BlueMapStructuresMod.LOGGER.info("BlueMap structure markers created: {} total", totalMarkers);
+  }
+
+  private static void createSpawnMarker(BlueMapAPI api, MinecraftServer server) {
+    BlockPos spawn = server.getOverworld().getSpawnPos();
+
+    String iconUrl = uploadIcon(api, "/icons/spawn.png", "structures/spawn.png");
+
+    POIMarker.Builder builder =
+        POIMarker.builder()
+            .label("World Spawn")
+            .detail("World Spawn (" + spawn.getX() + ", " + spawn.getZ() + ")")
+            .position((double) spawn.getX(), (double) spawn.getY(), (double) spawn.getZ())
+            .maxDistance(10000);
+
+    if (iconUrl != null) {
+      builder.icon(iconUrl, ICON_ANCHOR);
+    }
+
+    MarkerSet markerSet =
+        MarkerSet.builder().label("World Spawn").toggleable(true).defaultHidden(false).build();
+
+    markerSet.getMarkers().put("spawn", builder.build());
+
+    String markerSetId = "structures-spawn";
+    registeredMarkerSetIds.add(markerSetId);
+
+    for (BlueMapMap map : api.getMaps()) {
+      String worldId = map.getWorld().getId();
+      if (matchesDimension(worldId, StructureType.Dimension.OVERWORLD)) {
+        map.getMarkerSets().put(markerSetId, markerSet);
+      }
+    }
+
+    BlueMapStructuresMod.LOGGER.info("Added spawn marker at {}, {}", spawn.getX(), spawn.getZ());
+  }
+
+  private static String uploadIcon(BlueMapAPI api, String resourcePath, String assetName) {
+    String iconUrl = null;
+    for (BlueMapMap map : api.getMaps()) {
+      try (InputStream in = BlueMapIntegration.class.getResourceAsStream(resourcePath)) {
+        if (in == null) {
+          BlueMapStructuresMod.LOGGER.warn("Icon resource not found: {}", resourcePath);
+          break;
+        }
+        try (OutputStream out = map.getAssetStorage().writeAsset(assetName)) {
+          in.transferTo(out);
+        }
+        if (iconUrl == null) {
+          iconUrl = map.getAssetStorage().getAssetUrl(assetName);
+        }
+      } catch (IOException e) {
+        BlueMapStructuresMod.LOGGER.warn(
+            "Failed to upload icon {}: {}", resourcePath, e.getMessage());
+      }
+    }
+    return iconUrl;
   }
 
   private static ServerWorld getServerWorld(
