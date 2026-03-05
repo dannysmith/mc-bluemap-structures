@@ -1,5 +1,7 @@
 package dev.danny.bluemapstructures;
 
+import com.flowpowered.math.vector.Vector2i;
+import de.bluecolored.bluemap.api.AssetStorage;
 import de.bluecolored.bluemap.api.BlueMapAPI;
 import de.bluecolored.bluemap.api.BlueMapMap;
 import de.bluecolored.bluemap.api.markers.MarkerSet;
@@ -8,13 +10,15 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.world.World;
 
-import java.util.ArrayList;
-import java.util.EnumMap;
-import java.util.List;
-import java.util.Map;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.*;
 import java.util.function.Consumer;
 
 public class BlueMapIntegration {
+
+    private static final Vector2i ICON_ANCHOR = new Vector2i(11, 11); // center of 22x22 icon
 
     private static Consumer<BlueMapAPI> enableListener;
     private static Consumer<BlueMapAPI> disableListener;
@@ -58,6 +62,37 @@ public class BlueMapIntegration {
         registeredMarkerSetIds.clear();
     }
 
+    private static Map<StructureType, String> uploadIcons(BlueMapAPI api) {
+        Map<StructureType, String> iconUrls = new EnumMap<>(StructureType.class);
+
+        // Upload each structure type's icon to every map, capture URL from the first map
+        for (StructureType type : StructureType.values()) {
+            String resourcePath = "/icons/" + type.iconFile();
+            String assetName = "structures/" + type.iconFile();
+
+            for (BlueMapMap map : api.getMaps()) {
+                try (InputStream in = BlueMapIntegration.class.getResourceAsStream(resourcePath)) {
+                    if (in == null) {
+                        BlueMapStructuresMod.LOGGER.warn("Icon resource not found: {}", resourcePath);
+                        break;
+                    }
+                    try (OutputStream out = map.getAssetStorage().writeAsset(assetName)) {
+                        in.transferTo(out);
+                    }
+                    // Capture URL from first successful upload
+                    if (!iconUrls.containsKey(type)) {
+                        iconUrls.put(type, map.getAssetStorage().getAssetUrl(assetName));
+                    }
+                } catch (IOException e) {
+                    BlueMapStructuresMod.LOGGER.warn("Failed to upload icon for {}: {}", type.displayName(), e.getMessage());
+                }
+            }
+        }
+
+        BlueMapStructuresMod.LOGGER.info("Uploaded {} structure icons", iconUrls.size());
+        return iconUrls;
+    }
+
     private static void createMarkers(BlueMapAPI api, MinecraftServer server, long worldSeed, ModConfig config) {
         Map<StructureType.Dimension, BiomeValidator> validators = new EnumMap<>(StructureType.Dimension.class);
         for (StructureType.Dimension dim : StructureType.Dimension.values()) {
@@ -70,6 +105,8 @@ public class BlueMapIntegration {
         for (BlueMapMap map : api.getMaps()) {
             BlueMapStructuresMod.LOGGER.info("BlueMap map '{}' has world ID '{}'", map.getId(), map.getWorld().getId());
         }
+
+        Map<StructureType, String> iconUrls = uploadIcons(api);
 
         int totalMarkers = 0;
 
@@ -93,16 +130,22 @@ public class BlueMapIntegration {
                     .defaultHidden(type.defaultHidden)
                     .build();
 
+            String iconUrl = iconUrls.get(type);
+
             for (StructureLocator.StructurePos pos : positions) {
-                POIMarker marker = POIMarker.builder()
+                POIMarker.Builder builder = POIMarker.builder()
                         .label(type.displayName())
                         .detail(type.displayName() + " (" + pos.blockX() + ", " + pos.blockZ() + ")")
                         .position((double) pos.blockX(), 64.0, (double) pos.blockZ())
-                        .maxDistance(type.maxDistance)
-                        .build();
+                        .maxDistance(type.maxDistance);
+
+                if (iconUrl != null) {
+                    builder.icon(iconUrl, ICON_ANCHOR);
+                }
+
                 markerSet.getMarkers().put(
                         type.name().toLowerCase() + "_" + pos.blockX() + "_" + pos.blockZ(),
-                        marker
+                        builder.build()
                 );
             }
 

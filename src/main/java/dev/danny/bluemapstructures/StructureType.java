@@ -112,6 +112,30 @@ public enum StructureType {
         return "structures-" + name().toLowerCase();
     }
 
+    public String iconFile() {
+        return switch (this) {
+            case VILLAGE -> "village.png";
+            case DESERT_PYRAMID -> "desert_temple.png";
+            case JUNGLE_TEMPLE -> "jungle_temple.png";
+            case SWAMP_HUT -> "witch_hut.png";
+            case IGLOO -> "igloo.png";
+            case PILLAGER_OUTPOST -> "outpost.png";
+            case ANCIENT_CITY -> "ancient_city.png";
+            case TRAIL_RUINS -> "trail_ruins.png";
+            case TRIAL_CHAMBERS -> "trial_chamber.png";
+            case OCEAN_RUIN -> "ocean_ruins.png";
+            case SHIPWRECK -> "shipwreck.png";
+            case RUINED_PORTAL_OW -> "ruined_portal_ow.png";
+            case MONUMENT -> "monument.png";
+            case MANSION -> "mansion.png";
+            case FORTRESS -> "nether_fortress.png";
+            case BASTION -> "bastion.png";
+            case RUINED_PORTAL_NETHER -> "ruined_portal_nether.png";
+            case END_CITY -> "end_city.png";
+            case STRONGHOLD -> "stronghold.png";
+        };
+    }
+
     public enum SpreadType {
         LINEAR, TRIANGULAR, CONCENTRIC_RINGS
     }
