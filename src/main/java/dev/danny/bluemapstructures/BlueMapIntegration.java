@@ -1,184 +1,193 @@
 package dev.danny.bluemapstructures;
 
 import com.flowpowered.math.vector.Vector2i;
-import de.bluecolored.bluemap.api.AssetStorage;
 import de.bluecolored.bluemap.api.BlueMapAPI;
 import de.bluecolored.bluemap.api.BlueMapMap;
 import de.bluecolored.bluemap.api.markers.MarkerSet;
 import de.bluecolored.bluemap.api.markers.POIMarker;
-import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.world.World;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.*;
 import java.util.function.Consumer;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.world.ServerWorld;
+import net.minecraft.world.World;
 
 public class BlueMapIntegration {
 
-    private static final Vector2i ICON_ANCHOR = new Vector2i(11, 11); // center of 22x22 icon
+  private static final Vector2i ICON_ANCHOR = new Vector2i(11, 11); // center of 22x22 icon
 
-    private static Consumer<BlueMapAPI> enableListener;
-    private static Consumer<BlueMapAPI> disableListener;
-    private static final List<String> registeredMarkerSetIds = new ArrayList<>();
+  private static Consumer<BlueMapAPI> enableListener;
+  private static Consumer<BlueMapAPI> disableListener;
+  private static final List<String> registeredMarkerSetIds = new ArrayList<>();
 
-    public static void register(MinecraftServer server, long worldSeed, ModConfig config) {
-        unregister();
+  public static void register(MinecraftServer server, long worldSeed, ModConfig config) {
+    unregister();
 
-        enableListener = api -> {
-            BlueMapStructuresMod.LOGGER.info("BlueMap API enabled, creating structure markers...");
-            createMarkers(api, server, worldSeed, config);
+    enableListener =
+        api -> {
+          BlueMapStructuresMod.LOGGER.info("BlueMap API enabled, creating structure markers...");
+          createMarkers(api, server, worldSeed, config);
         };
 
-        disableListener = api -> {
-            BlueMapStructuresMod.LOGGER.info("BlueMap API disabling, removing structure markers...");
-            removeMarkers(api);
+    disableListener =
+        api -> {
+          BlueMapStructuresMod.LOGGER.info("BlueMap API disabling, removing structure markers...");
+          removeMarkers(api);
         };
 
-        BlueMapAPI.onEnable(enableListener);
-        BlueMapAPI.onDisable(disableListener);
+    BlueMapAPI.onEnable(enableListener);
+    BlueMapAPI.onDisable(disableListener);
+  }
+
+  public static void unregister() {
+    if (enableListener != null) {
+      BlueMapAPI.unregisterListener(enableListener);
+      enableListener = null;
+    }
+    if (disableListener != null) {
+      BlueMapAPI.unregisterListener(disableListener);
+      disableListener = null;
+    }
+    registeredMarkerSetIds.clear();
+  }
+
+  private static void removeMarkers(BlueMapAPI api) {
+    for (BlueMapMap map : api.getMaps()) {
+      for (String id : registeredMarkerSetIds) {
+        map.getMarkerSets().remove(id);
+      }
+    }
+    registeredMarkerSetIds.clear();
+  }
+
+  private static Map<StructureType, String> uploadIcons(BlueMapAPI api) {
+    Map<StructureType, String> iconUrls = new EnumMap<>(StructureType.class);
+
+    // Upload each structure type's icon to every map, capture URL from the first map
+    for (StructureType type : StructureType.values()) {
+      String resourcePath = "/icons/" + type.iconFile();
+      String assetName = "structures/" + type.iconFile();
+
+      for (BlueMapMap map : api.getMaps()) {
+        try (InputStream in = BlueMapIntegration.class.getResourceAsStream(resourcePath)) {
+          if (in == null) {
+            BlueMapStructuresMod.LOGGER.warn("Icon resource not found: {}", resourcePath);
+            break;
+          }
+          try (OutputStream out = map.getAssetStorage().writeAsset(assetName)) {
+            in.transferTo(out);
+          }
+          // Capture URL from first successful upload
+          if (!iconUrls.containsKey(type)) {
+            iconUrls.put(type, map.getAssetStorage().getAssetUrl(assetName));
+          }
+        } catch (IOException e) {
+          BlueMapStructuresMod.LOGGER.warn(
+              "Failed to upload icon for {}: {}", type.displayName(), e.getMessage());
+        }
+      }
     }
 
-    public static void unregister() {
-        if (enableListener != null) {
-            BlueMapAPI.unregisterListener(enableListener);
-            enableListener = null;
-        }
-        if (disableListener != null) {
-            BlueMapAPI.unregisterListener(disableListener);
-            disableListener = null;
-        }
-        registeredMarkerSetIds.clear();
+    BlueMapStructuresMod.LOGGER.info("Uploaded {} structure icons", iconUrls.size());
+    return iconUrls;
+  }
+
+  private static void createMarkers(
+      BlueMapAPI api, MinecraftServer server, long worldSeed, ModConfig config) {
+    Map<StructureType.Dimension, BiomeValidator> validators =
+        new EnumMap<>(StructureType.Dimension.class);
+    for (StructureType.Dimension dim : StructureType.Dimension.values()) {
+      ServerWorld world = getServerWorld(server, dim);
+      if (world != null) {
+        validators.put(dim, new BiomeValidator(world));
+      }
     }
 
-    private static void removeMarkers(BlueMapAPI api) {
-        for (BlueMapMap map : api.getMaps()) {
-            for (String id : registeredMarkerSetIds) {
-                map.getMarkerSets().remove(id);
-            }
-        }
-        registeredMarkerSetIds.clear();
+    for (BlueMapMap map : api.getMaps()) {
+      BlueMapStructuresMod.LOGGER.info(
+          "BlueMap map '{}' has world ID '{}'", map.getId(), map.getWorld().getId());
     }
 
-    private static Map<StructureType, String> uploadIcons(BlueMapAPI api) {
-        Map<StructureType, String> iconUrls = new EnumMap<>(StructureType.class);
+    Map<StructureType, String> iconUrls = uploadIcons(api);
 
-        // Upload each structure type's icon to every map, capture URL from the first map
-        for (StructureType type : StructureType.values()) {
-            String resourcePath = "/icons/" + type.iconFile();
-            String assetName = "structures/" + type.iconFile();
+    int totalMarkers = 0;
 
-            for (BlueMapMap map : api.getMaps()) {
-                try (InputStream in = BlueMapIntegration.class.getResourceAsStream(resourcePath)) {
-                    if (in == null) {
-                        BlueMapStructuresMod.LOGGER.warn("Icon resource not found: {}", resourcePath);
-                        break;
-                    }
-                    try (OutputStream out = map.getAssetStorage().writeAsset(assetName)) {
-                        in.transferTo(out);
-                    }
-                    // Capture URL from first successful upload
-                    if (!iconUrls.containsKey(type)) {
-                        iconUrls.put(type, map.getAssetStorage().getAssetUrl(assetName));
-                    }
-                } catch (IOException e) {
-                    BlueMapStructuresMod.LOGGER.warn("Failed to upload icon for {}: {}", type.displayName(), e.getMessage());
-                }
-            }
+    for (StructureType type : StructureType.values()) {
+      if (!config.isEnabled(type)) continue;
+
+      BiomeValidator validator = validators.get(type.dimension);
+      int effectiveRadius =
+          switch (type.dimension) {
+            case NETHER -> config.radiusBlocks / 8;
+            case END -> config.radiusBlocks;
+            case OVERWORLD -> config.radiusBlocks;
+          };
+      List<StructureLocator.StructurePos> positions =
+          StructureLocator.findStructures(type, worldSeed, effectiveRadius, validator);
+
+      if (positions.isEmpty()) continue;
+
+      MarkerSet markerSet =
+          MarkerSet.builder()
+              .label(type.displayName())
+              .toggleable(true)
+              .defaultHidden(type.defaultHidden)
+              .build();
+
+      String iconUrl = iconUrls.get(type);
+
+      for (StructureLocator.StructurePos pos : positions) {
+        POIMarker.Builder builder =
+            POIMarker.builder()
+                .label(type.displayName())
+                .detail(type.displayName() + " (" + pos.blockX() + ", " + pos.blockZ() + ")")
+                .position((double) pos.blockX(), 64.0, (double) pos.blockZ())
+                .maxDistance(type.maxDistance);
+
+        if (iconUrl != null) {
+          builder.icon(iconUrl, ICON_ANCHOR);
         }
 
-        BlueMapStructuresMod.LOGGER.info("Uploaded {} structure icons", iconUrls.size());
-        return iconUrls;
-    }
+        markerSet
+            .getMarkers()
+            .put(
+                type.name().toLowerCase() + "_" + pos.blockX() + "_" + pos.blockZ(),
+                builder.build());
+      }
 
-    private static void createMarkers(BlueMapAPI api, MinecraftServer server, long worldSeed, ModConfig config) {
-        Map<StructureType.Dimension, BiomeValidator> validators = new EnumMap<>(StructureType.Dimension.class);
-        for (StructureType.Dimension dim : StructureType.Dimension.values()) {
-            ServerWorld world = getServerWorld(server, dim);
-            if (world != null) {
-                validators.put(dim, new BiomeValidator(world));
-            }
+      String markerSetId = type.markerSetId();
+      registeredMarkerSetIds.add(markerSetId);
+
+      for (BlueMapMap map : api.getMaps()) {
+        String worldId = map.getWorld().getId();
+        if (matchesDimension(worldId, type.dimension)) {
+          map.getMarkerSets().put(markerSetId, markerSet);
         }
+      }
 
-        for (BlueMapMap map : api.getMaps()) {
-            BlueMapStructuresMod.LOGGER.info("BlueMap map '{}' has world ID '{}'", map.getId(), map.getWorld().getId());
-        }
-
-        Map<StructureType, String> iconUrls = uploadIcons(api);
-
-        int totalMarkers = 0;
-
-        for (StructureType type : StructureType.values()) {
-            if (!config.isEnabled(type)) continue;
-
-            BiomeValidator validator = validators.get(type.dimension);
-            int effectiveRadius = switch (type.dimension) {
-                case NETHER -> config.radiusBlocks / 8;
-                case END -> config.radiusBlocks;
-                case OVERWORLD -> config.radiusBlocks;
-            };
-            List<StructureLocator.StructurePos> positions =
-                    StructureLocator.findStructures(type, worldSeed, effectiveRadius, validator);
-
-            if (positions.isEmpty()) continue;
-
-            MarkerSet markerSet = MarkerSet.builder()
-                    .label(type.displayName())
-                    .toggleable(true)
-                    .defaultHidden(type.defaultHidden)
-                    .build();
-
-            String iconUrl = iconUrls.get(type);
-
-            for (StructureLocator.StructurePos pos : positions) {
-                POIMarker.Builder builder = POIMarker.builder()
-                        .label(type.displayName())
-                        .detail(type.displayName() + " (" + pos.blockX() + ", " + pos.blockZ() + ")")
-                        .position((double) pos.blockX(), 64.0, (double) pos.blockZ())
-                        .maxDistance(type.maxDistance);
-
-                if (iconUrl != null) {
-                    builder.icon(iconUrl, ICON_ANCHOR);
-                }
-
-                markerSet.getMarkers().put(
-                        type.name().toLowerCase() + "_" + pos.blockX() + "_" + pos.blockZ(),
-                        builder.build()
-                );
-            }
-
-            String markerSetId = type.markerSetId();
-            registeredMarkerSetIds.add(markerSetId);
-
-            for (BlueMapMap map : api.getMaps()) {
-                String worldId = map.getWorld().getId();
-                if (matchesDimension(worldId, type.dimension)) {
-                    map.getMarkerSets().put(markerSetId, markerSet);
-                }
-            }
-
-            totalMarkers += positions.size();
-            BlueMapStructuresMod.LOGGER.info("Added {} {} markers", positions.size(), type.displayName());
-        }
-
-        BlueMapStructuresMod.LOGGER.info("BlueMap structure markers created: {} total", totalMarkers);
+      totalMarkers += positions.size();
+      BlueMapStructuresMod.LOGGER.info("Added {} {} markers", positions.size(), type.displayName());
     }
 
-    private static ServerWorld getServerWorld(MinecraftServer server, StructureType.Dimension dimension) {
-        return switch (dimension) {
-            case OVERWORLD -> server.getOverworld();
-            case NETHER -> server.getWorld(World.NETHER);
-            case END -> server.getWorld(World.END);
-        };
-    }
+    BlueMapStructuresMod.LOGGER.info("BlueMap structure markers created: {} total", totalMarkers);
+  }
 
-    private static boolean matchesDimension(String worldId, StructureType.Dimension dimension) {
-        return switch (dimension) {
-            case OVERWORLD -> worldId.contains("overworld");
-            case NETHER -> worldId.contains("the_nether");
-            case END -> worldId.contains("the_end");
-        };
-    }
+  private static ServerWorld getServerWorld(
+      MinecraftServer server, StructureType.Dimension dimension) {
+    return switch (dimension) {
+      case OVERWORLD -> server.getOverworld();
+      case NETHER -> server.getWorld(World.NETHER);
+      case END -> server.getWorld(World.END);
+    };
+  }
+
+  private static boolean matchesDimension(String worldId, StructureType.Dimension dimension) {
+    return switch (dimension) {
+      case OVERWORLD -> worldId.contains("overworld");
+      case NETHER -> worldId.contains("the_nether");
+      case END -> worldId.contains("the_end");
+    };
+  }
 }
