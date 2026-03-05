@@ -60,7 +60,7 @@ docs/                     — Developer documentation
 
 | Dependency | Scope | Purpose |
 |-----------|-------|---------|
-| Minecraft 1.21.1 | compile | Game classes (mapped via Yarn) |
+| Minecraft 1.21.11 | compile | Game classes (mapped via Yarn) |
 | Fabric Loader | runtime | Mod loading |
 | Fabric API | runtime | Lifecycle events, registry access |
 | BlueMapAPI 2.7.2 | compileOnly | Marker creation (optional at runtime) |

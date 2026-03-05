@@ -4,7 +4,7 @@ See @docs/tasks.md for task management
 
 ## Project
 
-Fabric server-side mod (Java 21, MC 1.21.1) adding structure markers to BlueMap. No external structure-finding libs — we implement the seed-based position algorithm directly.
+Fabric server-side mod (Java 21, MC 1.21.11) adding structure markers to BlueMap. No external structure-finding libs — we implement the seed-based position algorithm directly.
 
 ## Documentation
 
@@ -53,7 +53,7 @@ src/main/resources/
 
 ## Dependencies
 
-- Fabric API, Fabric Loader 0.16+
+- Fabric API, Fabric Loader 0.18+
 - BlueMapAPI 2.7.2 (`compileOnly` — mod works without BlueMap, just does nothing)
-- Minecraft 1.21.1, Yarn mappings, Java 21
+- Minecraft 1.21.11, Yarn mappings, Java 21
 - JUnit Jupiter 5.10.3 (test only)

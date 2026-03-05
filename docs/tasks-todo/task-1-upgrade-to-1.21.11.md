@@ -12,7 +12,7 @@ The mod is compiled for MC 1.21.1 but the server runs 1.21.11. This causes runti
 | Yarn Mappings     | 1.21.1+build.3      | 1.21.11+build.4     |
 | Fabric Loader     | 0.16.14             | 0.18.4              |
 | Fabric API        | 0.115.0+1.21.1      | 0.141.3+1.21.11     |
-| Fabric Loom       | 1.9-SNAPSHOT        | 1.15                |
+| Fabric Loom       | 1.9-SNAPSHOT        | 1.15.4              |
 | Gradle            | 8.12                | 9.2 (minimum for Loom 1.14+) |
 | BlueMap API       | 2.7.2               | 2.7.2 (unchanged)   |
 | JUnit Jupiter     | 5.10.3              | 5.10.3 (unchanged)  |

@@ -11,9 +11,9 @@
         "main": ["dev.danny.bluemapstructures.BlueMapStructuresMod"]
     },
     "depends": {
-        "fabricloader": ">=0.16.0",
+        "fabricloader": ">=0.18.0",
         "fabric-api": "*",
-        "minecraft": "~1.21.1"
+        "minecraft": "~1.21.11"
     },
     "suggests": {
         "bluemap": ">=5.0"

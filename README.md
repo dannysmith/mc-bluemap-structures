@@ -1,6 +1,6 @@
 # BlueMap Structure Markers
 
-Fabric server-side mod for Minecraft 1.21.1 that adds Chunkbase-style toggleable structure markers to BlueMap. Predicts structure positions from the world seed using the same algorithm as Minecraft, with biome validation to filter false positives.
+Fabric server-side mod for Minecraft 1.21.11 that adds Chunkbase-style toggleable structure markers to BlueMap. Predicts structure positions from the world seed using the same algorithm as Minecraft, with biome validation to filter false positives.
 
 ## Features
 
