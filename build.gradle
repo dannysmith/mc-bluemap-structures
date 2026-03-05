@@ -1,6 +1,7 @@
 plugins {
     id "fabric-loom" version "1.9-SNAPSHOT"
     id "java"
+    id "com.diffplug.spotless" version "8.3.0"
 }
 
 version = project.mod_version
@@ -42,6 +43,18 @@ jar {
     from("LICENSE") {
         rename { "${it}_${project.archives_base_name}" }
     }
+}
+
+spotless {
+    java {
+        googleJavaFormat()
+        removeUnusedImports()
+        importOrder()
+    }
+}
+
+tasks.named("check").configure {
+    dependsOn tasks.named("spotlessCheck")
 }
 
 tasks.register("testPositions", JavaExec) {
