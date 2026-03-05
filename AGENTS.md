@@ -6,6 +6,15 @@ See @docs/tasks.md for task management
 
 Fabric server-side mod (Java 21, MC 1.21.1) adding structure markers to BlueMap. No external structure-finding libs — we implement the seed-based position algorithm directly.
 
+## Documentation
+
+Detailed docs are in `docs/`. Read the relevant doc before working on that area:
+
+- `docs/architecture.md` — Mod structure, data flow, design decisions
+- `docs/structure-algorithm.md` — Position algorithm, region seeds, spread types, parameter table
+- `docs/testing.md` — How to run/add tests, MC classpath in tests
+- `docs/dev-setup.md` — Build commands, formatting, project structure
+
 ## Source Layout
 
 ```
@@ -17,26 +26,23 @@ src/main/java/dev/danny/bluemapstructures/
   BiomeValidator.java          — Biome checking via BiomeSource (no chunk loading)
   BlueMapIntegration.java      — Uploads icons, creates MarkerSets + POIMarkers
   ModConfig.java               — JSON config (radius, per-structure toggles)
-  TestPositions.java           — Standalone test: prints positions for seed 12345
-  TestAgainstMinecraft.java    — Verifies our RNG against MC's ChunkRandom
+
+src/test/java/dev/danny/bluemapstructures/
+  StructureLocatorTest.java         — Algorithm correctness + regression guards
+  ChunkRandomVerificationTest.java  — Our RNG vs Minecraft's ChunkRandom
+
 src/main/resources/
-  icons/                       — 22x22 PNG icons per structure type (from Chunkbase sprite)
+  icons/                       — 22x22 PNG icons per structure type
   fabric.mod.json
 ```
-
-## Key Architecture Decisions
-
-- **Own algorithm, no libs**: The structure position algorithm is ~50 lines. SeedFinding libs are stale (last updated ~1.18). Our implementation is verified against MC's own `ChunkRandom.setRegionSeed()`.
-- **BiomeSource for validation**: Uses `BiomeSource.getBiome()` with `MultiNoiseSampler` instead of `world.getBiome()` to avoid chunk loading. Pure function of coordinates + seed, thread-safe.
-- **Nether Fortress/Bastion share a grid**: Same spacing/salt, differentiated by a weight roll (`nextInt(5) < 2` = fortress).
-- **BlueMap icons via AssetStorage**: Icons uploaded to each map's asset storage on enable, referenced by URL in POIMarkers.
 
 ## Build & Test
 
 ```bash
-./gradlew build            # JAR at build/libs/bluemap-structures-1.0.0.jar
-./gradlew testPositions    # Print positions for seed 12345 (no MC dependency)
-./gradlew testVsMC         # Compare RNG vs MC's ChunkRandom (needs MC classpath)
+./gradlew build            # compile + format check + tests + JAR
+./gradlew check            # compile + format check + tests (no JAR)
+./gradlew test             # JUnit tests only
+./gradlew spotlessApply    # auto-fix formatting
 ```
 
 ## Known Limitations
@@ -50,3 +56,4 @@ src/main/resources/
 - Fabric API, Fabric Loader 0.16+
 - BlueMapAPI 2.7.2 (`compileOnly` — mod works without BlueMap, just does nothing)
 - Minecraft 1.21.1, Yarn mappings, Java 21
+- JUnit Jupiter 5.10.3 (test only)
