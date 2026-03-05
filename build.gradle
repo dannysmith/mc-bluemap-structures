@@ -21,6 +21,9 @@ dependencies {
     modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
     modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
     compileOnly "de.bluecolored.bluemap:BlueMapAPI:${project.bluemap_api_version}"
+
+    testImplementation "org.junit.jupiter:junit-jupiter:5.10.3"
+    testRuntimeOnly "org.junit.platform:junit-platform-launcher"
 }
 
 processResources {
@@ -45,6 +48,14 @@ jar {
     }
 }
 
+test {
+    useJUnitPlatform()
+    testLogging {
+        events "passed", "skipped", "failed"
+        exceptionFormat "full"
+    }
+}
+
 spotless {
     java {
         googleJavaFormat()
@@ -55,14 +66,4 @@ spotless {
 
 tasks.named("check").configure {
     dependsOn tasks.named("spotlessCheck")
-}
-
-tasks.register("testPositions", JavaExec) {
-    classpath = sourceSets.main.runtimeClasspath
-    mainClass = "dev.danny.bluemapstructures.TestPositions"
-}
-
-tasks.register("testVsMC", JavaExec) {
-    classpath = sourceSets.main.runtimeClasspath
-    mainClass = "dev.danny.bluemapstructures.TestAgainstMinecraft"
 }
