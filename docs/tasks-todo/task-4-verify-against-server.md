@@ -21,3 +21,13 @@ From AGENTS.md:
 
 ## Structures to verify
 All types in `StructureType.java` enum, prioritising those with known inaccuracy concerns.
+
+
+## Notes
+
+- Strongold
+  - Our Location: -40, -1848
+  - Actual Location: 68 -1548
+- Stronghold
+  - Our Location: -1368, 840
+  - Actual Location: -1676, 916
