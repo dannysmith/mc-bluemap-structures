@@ -1,0 +1,14 @@
+{
+  "name": "chunkbase-verify",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "extract": "bun run extract.ts"
+  },
+  "dependencies": {
+    "playwright": "^1.52.0"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.3.10"
+  }
+}
