@@ -105,6 +105,22 @@ class StructureLocatorTest {
   }
 
   @Test
+  void end_city_ship_detection() {
+    List<StructureLocator.StructurePos> positions =
+        StructureLocator.findStructures(StructureType.END_CITY, SEED, RADIUS, null);
+    long withShip = positions.stream().filter(StructureLocator.StructurePos::hasShip).count();
+    long withoutShip = positions.size() - withShip;
+    assertEquals(84, withShip, "End cities with ship for seed 12345, radius 2000");
+    assertEquals(76, withoutShip, "End cities without ship for seed 12345, radius 2000");
+
+    // Verify specific positions have correct ship status
+    assertHasShipAt(positions, -1880, -1912, true);
+    assertHasShipAt(positions, -1864, -552, false);
+    assertHasShipAt(positions, 88, -248, true);
+    assertHasShipAt(positions, 56, 24, false);
+  }
+
+  @Test
   void known_stronghold_positions() {
     List<StructureLocator.StructurePos> positions =
         StructureLocator.findStructures(StructureType.STRONGHOLD, SEED, RADIUS, null);
@@ -117,5 +133,17 @@ class StructureLocatorTest {
       List<StructureLocator.StructurePos> positions, int blockX, int blockZ) {
     boolean found = positions.stream().anyMatch(p -> p.blockX() == blockX && p.blockZ() == blockZ);
     assertTrue(found, "Expected position (" + blockX + ", " + blockZ + ") not found");
+  }
+
+  private void assertHasShipAt(
+      List<StructureLocator.StructurePos> positions, int blockX, int blockZ, boolean expectedShip) {
+    StructureLocator.StructurePos pos =
+        positions.stream()
+            .filter(p -> p.blockX() == blockX && p.blockZ() == blockZ)
+            .findFirst()
+            .orElseThrow(
+                () -> new AssertionError("Position (" + blockX + ", " + blockZ + ") not found"));
+    assertEquals(
+        expectedShip, pos.hasShip(), "Position (" + blockX + ", " + blockZ + ") hasShip mismatch");
   }
 }

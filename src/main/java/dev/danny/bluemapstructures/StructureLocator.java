@@ -11,7 +11,11 @@ public class StructureLocator {
   private static final long REGION_X_MULTIPLIER = 341873128712L;
   private static final long REGION_Z_MULTIPLIER = 132897987541L;
 
-  public record StructurePos(int blockX, int blockZ, StructureType type) {}
+  public record StructurePos(int blockX, int blockZ, StructureType type, boolean hasShip) {
+    public StructurePos(int blockX, int blockZ, StructureType type) {
+      this(blockX, blockZ, type, false);
+    }
+  }
 
   public static List<StructurePos> findStructures(
       StructureType type, long worldSeed, int radiusBlocks, BiomeValidator validator) {
@@ -42,7 +46,10 @@ public class StructureLocator {
 
         if (Math.abs(blockX) <= radiusBlocks && Math.abs(blockZ) <= radiusBlocks) {
           if (validator == null || validator.isValidPosition(type, blockX, blockZ)) {
-            results.add(new StructurePos(blockX, blockZ, type));
+            boolean hasShip =
+                type == StructureType.END_CITY
+                    && EndCityShipDetector.hasShip(worldSeed, chunk[0], chunk[1]);
+            results.add(new StructurePos(blockX, blockZ, type, hasShip));
           }
         }
       }

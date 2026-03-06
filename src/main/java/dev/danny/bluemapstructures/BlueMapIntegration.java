@@ -94,6 +94,7 @@ public class BlueMapIntegration {
     }
 
     Map<StructureType, String> iconUrls = uploadIcons(api);
+    String endShipIconUrl = uploadIcon(api, "/icons/end_ship.png", "structures/end_ship.png");
 
     int totalMarkers = 0;
 
@@ -122,15 +123,18 @@ public class BlueMapIntegration {
       String iconUrl = iconUrls.get(type);
 
       for (StructureLocator.StructurePos pos : positions) {
+        boolean isShip = pos.hasShip() && type == StructureType.END_CITY;
+        String label = isShip ? "End City (Ship)" : type.displayName();
         POIMarker.Builder builder =
             POIMarker.builder()
-                .label(type.displayName())
-                .detail(type.displayName() + " (" + pos.blockX() + ", " + pos.blockZ() + ")")
+                .label(label)
+                .detail(label + " (" + pos.blockX() + ", " + pos.blockZ() + ")")
                 .position((double) pos.blockX(), 64.0, (double) pos.blockZ())
                 .maxDistance(type.maxDistance);
 
-        if (iconUrl != null) {
-          builder.icon(iconUrl, ICON_ANCHOR);
+        String markerIconUrl = (isShip && endShipIconUrl != null) ? endShipIconUrl : iconUrl;
+        if (markerIconUrl != null) {
+          builder.icon(markerIconUrl, ICON_ANCHOR);
         }
 
         markerSet
