@@ -145,6 +145,7 @@ Use the server seed extraction data (`data/chunkbase-seed--8408138640175831038.j
 | `src/main/java/.../StructureLocator.java` | Main grid algorithm |
 | `src/main/java/.../StrongholdLocator.java` | Stronghold ring algorithm |
 | `src/main/java/.../StructureType.java` | Structure parameters (spacing/salt/etc) |
+| `build.gradle` | `showStandardStreams = true` added to see test output |
 
 ### Mapping Chunkbase type IDs to our StructureType enum
 | Chunkbase ID | Our StructureType |
