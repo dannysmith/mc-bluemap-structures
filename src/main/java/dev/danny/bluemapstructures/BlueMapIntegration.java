@@ -241,14 +241,13 @@ public class BlueMapIntegration {
         + blockZ
         + ")"
         + "<br>"
-        + "<code>"
+        + "<input type=\"text\" value=\""
         + tpCommand
-        + "</code> "
-        + "<button onmousedown=\"event.stopPropagation();navigator.clipboard.writeText('"
-        + tpCommand
-        + "');this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',1500)\""
-        + " style=\"cursor:pointer;padding:2px 6px;font-size:12px\""
-        + ">Copy</button>";
+        + "\" readonly onfocus=\"this.select()\""
+        + " style=\"pointer-events:auto;user-select:text;"
+        + "width:100%;font-family:monospace;font-size:12px;"
+        + "background:#1a1a2e;color:#eee;border:1px solid #444;"
+        + "padding:3px 5px;margin-top:4px;cursor:text;box-sizing:border-box\">";
   }
 
   private static boolean matchesDimension(String worldId, StructureType.Dimension dimension) {
