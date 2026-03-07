@@ -124,13 +124,17 @@ class ChunkbaseComparisonTest {
         ourSet.add(new Pos(pos.blockX(), pos.blockZ()));
       }
 
-      // Chunk-level matching: positions are "same" if within the same chunk (16 blocks)
+      // Chunk-level matching: positions are "same" if within tolerance blocks.
+      // Trial chambers need 17 because Chunkbase reports entry positions with
+      // block offsets of 7/9 (not chunk center 8), causing 1-block overshoot
+      // when our chunk coordinate differs by 1 from Chunkbase's.
+      int tolerance = type == StructureType.TRIAL_CHAMBERS ? 17 : 16;
       Set<Pos> matches = new HashSet<>();
       Set<Pos> falsePositives = new HashSet<>(ourSet);
       Set<Pos> falseNegatives = new HashSet<>(cbSet);
 
       for (Pos ourPos : ourSet) {
-        Pos matched = findNearby(cbSet, ourPos, 16);
+        Pos matched = findNearby(cbSet, ourPos, tolerance);
         if (matched != null) {
           matches.add(ourPos);
           falsePositives.remove(ourPos);
@@ -159,18 +163,14 @@ class ChunkbaseComparisonTest {
         System.out.println("  False positives (we predict, CB doesn't): " + falsePositives);
       } else if (fpCount > 10) {
         System.out.println(
-            "  False positives (first 10): "
-                + falsePositives.stream().limit(10).toList()
-                + " ...");
+            "  False positives (first 10): " + falsePositives.stream().limit(10).toList() + " ...");
       }
 
       if (fnCount > 0 && fnCount <= 10) {
         System.out.println("  False negatives (CB predicts, we don't): " + falseNegatives);
       } else if (fnCount > 10) {
         System.out.println(
-            "  False negatives (first 10): "
-                + falseNegatives.stream().limit(10).toList()
-                + " ...");
+            "  False negatives (first 10): " + falseNegatives.stream().limit(10).toList() + " ...");
       }
     }
 

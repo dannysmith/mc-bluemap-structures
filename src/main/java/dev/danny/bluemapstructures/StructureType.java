@@ -24,7 +24,7 @@ public enum StructureType {
   // Nether
   FORTRESS(27, 4, 30084232, SpreadType.LINEAR, Dimension.NETHER, 1000, false),
   BASTION(27, 4, 30084232, SpreadType.LINEAR, Dimension.NETHER, 1000, false),
-  RUINED_PORTAL_NETHER(25, 10, 34222645, SpreadType.LINEAR, Dimension.NETHER, 500, true),
+  RUINED_PORTAL_NETHER(40, 15, 34222645, SpreadType.LINEAR, Dimension.NETHER, 500, true),
 
   // End
   END_CITY(20, 11, 10387313, SpreadType.TRIANGULAR, Dimension.END, 5000, false),

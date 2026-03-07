@@ -91,11 +91,16 @@ public class StructureLocator {
     int regionMin = Math.floorDiv(-radiusChunks, spacing) - 1;
     int regionMax = Math.floorDiv(radiusChunks, spacing) + 1;
 
+    // Pre-compute the two multipliers for setCarverSeed (they only depend on worldSeed)
+    Random carverInit = new Random(worldSeed);
+    long carverMultA = carverInit.nextLong();
+    long carverMultB = carverInit.nextLong();
+
     for (int regionX = regionMin; regionX <= regionMax; regionX++) {
       for (int regionZ = regionMin; regionZ <= regionMax; regionZ++) {
         long regionSeed =
-            (long) regionX * 341873128712L
-                + (long) regionZ * 132897987541L
+            (long) regionX * REGION_X_MULTIPLIER
+                + (long) regionZ * REGION_Z_MULTIPLIER
                 + worldSeed
                 + (long) salt;
         Random rand = new Random(regionSeed);
@@ -104,8 +109,10 @@ public class StructureLocator {
         int chunkX = regionX * spacing + rand.nextInt(range);
         int chunkZ = regionZ * spacing + rand.nextInt(range);
 
-        // Weight roll: fortress=2, bastion=3 (total=5)
-        int roll = rand.nextInt(5);
+        // Weight roll uses setCarverSeed with the output chunk position (MC 1.18+)
+        long carverSeed = (carverMultA * (long) chunkX) ^ (carverMultB * (long) chunkZ) ^ worldSeed;
+        Random weightRand = new Random(carverSeed);
+        int roll = weightRand.nextInt(5);
         boolean isFortress = roll < 2;
 
         StructureType actualType = isFortress ? StructureType.FORTRESS : StructureType.BASTION;

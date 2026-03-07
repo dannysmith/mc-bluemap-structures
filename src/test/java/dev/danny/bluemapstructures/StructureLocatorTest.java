@@ -89,9 +89,10 @@ class StructureLocatorTest {
   void known_fortress_positions() {
     List<StructureLocator.StructurePos> positions =
         StructureLocator.findStructures(StructureType.FORTRESS, SEED, RADIUS, null);
-    assertEquals(32, positions.size(), "Fortress count for seed 12345, radius 2000");
-    assertContainsPosition(positions, -328, 136);
-    assertContainsPosition(positions, 456, 24);
+    // Updated count after carver seed fix (MC 1.18+ weight selection algorithm)
+    assertEquals(24, positions.size(), "Fortress count for seed 12345, radius 2000");
+    assertContainsPosition(positions, -1960, -1560);
+    assertContainsPosition(positions, -1608, -232);
   }
 
   @Test
