@@ -244,7 +244,7 @@ public class BlueMapIntegration {
         + "<code>"
         + tpCommand
         + "</code> "
-        + "<button onclick=\"navigator.clipboard.writeText('"
+        + "<button onmousedown=\"event.stopPropagation();navigator.clipboard.writeText('"
         + tpCommand
         + "');this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',1500)\""
         + " style=\"cursor:pointer;padding:2px 6px;font-size:12px\""
