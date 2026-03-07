@@ -29,9 +29,23 @@ Tests the position algorithm in `StructureLocator` and `StrongholdLocator`.
 
 Verifies our RNG seeding matches Minecraft's `ChunkRandom.setRegionSeed()`.
 
-- **`our_rng_matches_minecraft_chunk_random`** — Parameterized across a 5x5 region grid (-2 to +2 in both axes). For each region, computes the village chunk position using both our algorithm and Minecraft's actual `ChunkRandom` + `SpreadType.LINEAR`, then asserts they produce identical results.
+- **`village_rng_matches_minecraft`** — Parameterized across a 5x5 region grid (-2 to +2 in both axes). For each region, computes the village chunk position using both our algorithm and Minecraft's actual `ChunkRandom` + `SpreadType.LINEAR`, then asserts they produce identical results.
+
+- **`trial_chambers_rng_matches_minecraft`** — Same verification for trial chamber parameters (salt=94251327, range=22). Confirms our `nextInt` matches MC's `CheckedRandom.nextInt` for this structure type.
+
+Both tests use a shared `assertLinearSpreadMatches` helper parameterized by spacing, separation, and salt.
 
 This test uses Minecraft classes (`ChunkRandom`, `CheckedRandom`, `SpreadType`) which are available on the test classpath because Fabric Loom automatically includes the deobfuscated Minecraft JAR. No `fabric-loader-junit` or special test engine is needed.
+
+### ChunkbaseComparisonTest
+
+Compares our algorithm output against Chunkbase's extracted positions for seed 12345, radius 10000.
+
+- **`compare_all_structure_types`** — Loads Chunkbase JSON fixture, runs our algorithm for each structure type, and reports matches, false positives, and false negatives. Uses 16-block tolerance (17 for trial chambers due to Chunkbase's block offset reporting). Coverage is 80-100% for most structure types. False positives are expected without biome validation.
+
+### EndCityShipDetectorTest
+
+Regression tests for end city ship detection logic.
 
 ## How the MC Classpath Works in Tests
 
@@ -57,4 +71,6 @@ If you change the position calculation (e.g., adding the Pillager Outpost freque
 
 ### Verifying against Chunkbase
 
-The regression tests use seed 12345. You can cross-reference positions against [Chunkbase](https://www.chunkbase.com/apps/seed-map) with the same seed to verify correctness visually. Note that Chunkbase shows chunk coordinates, while our positions are block coordinates (chunk * 16 + 8).
+The `ChunkbaseComparisonTest` automated test compares our output against Chunkbase data extracted using the Playwright tool in `tools/chunkbase-verify/`. See `docs/tasks-todo/task-4-verify-against-server.md` for the full comparison results and methodology.
+
+For manual spot-checking, you can cross-reference positions against [Chunkbase](https://www.chunkbase.com/apps/seed-map). Note that Chunkbase shows chunk coordinates, while our positions are block coordinates (chunk * 16 + 8).

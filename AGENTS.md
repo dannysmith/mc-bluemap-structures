@@ -22,14 +22,18 @@ src/main/java/dev/danny/bluemapstructures/
   BlueMapStructuresMod.java    — Fabric entrypoint, hooks SERVER_STARTED
   StructureType.java           — Enum: 19 structures with spacing/salt/dimension/maxDistance/icon
   StructureLocator.java        — Grid-based position algorithm (linear + triangular spread)
-  StrongholdLocator.java       — Concentric rings algorithm (strongholds only)
+  StrongholdLocator.java       — Reads vanilla positions at runtime, geometric fallback
+  BuriedTreasureLocator.java   — Buried treasure algorithm (region-map based)
+  EndCityShipDetector.java     — Detects whether an end city has a ship
   BiomeValidator.java          — Biome checking via BiomeSource (no chunk loading)
   BlueMapIntegration.java      — Uploads icons, creates MarkerSets + POIMarkers
   ModConfig.java               — JSON config (radius, per-structure toggles)
 
 src/test/java/dev/danny/bluemapstructures/
   StructureLocatorTest.java         — Algorithm correctness + regression guards
-  ChunkRandomVerificationTest.java  — Our RNG vs Minecraft's ChunkRandom
+  ChunkRandomVerificationTest.java  — Our RNG vs Minecraft's ChunkRandom (village + trial chambers)
+  ChunkbaseComparisonTest.java      — Compare against Chunkbase extraction data
+  EndCityShipDetectorTest.java      — Ship detection regression tests
 
 src/main/resources/
   icons/                       — 22x22 PNG icons per structure type

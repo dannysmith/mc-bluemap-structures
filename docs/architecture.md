@@ -11,7 +11,9 @@ src/main/java/dev/danny/bluemapstructures/
   BlueMapStructuresMod.java    — Fabric entrypoint
   StructureType.java           — Enum: 19 structures with grid parameters
   StructureLocator.java        — Seed-based position algorithm
-  StrongholdLocator.java       — Concentric rings algorithm (strongholds only)
+  StrongholdLocator.java       — Reads vanilla positions at runtime, geometric fallback
+  BuriedTreasureLocator.java   — Buried treasure algorithm (region-map based)
+  EndCityShipDetector.java     — Detects whether an end city has a ship
   BiomeValidator.java          — Biome checking via BiomeSource
   BlueMapIntegration.java      — Creates MarkerSets + POIMarkers
   ModConfig.java               — JSON config (radius, per-structure toggles)
@@ -19,6 +21,8 @@ src/main/java/dev/danny/bluemapstructures/
 src/test/java/dev/danny/bluemapstructures/
   StructureLocatorTest.java         — Algorithm correctness + regression guards
   ChunkRandomVerificationTest.java  — Our RNG vs Minecraft's ChunkRandom
+  ChunkbaseComparisonTest.java      — Compare against Chunkbase extraction data
+  EndCityShipDetectorTest.java      — Ship detection regression tests
 ```
 
 ## Data Flow
@@ -43,7 +47,7 @@ SERVER_STARTED event
 
 The structure position algorithm is ~50 lines. The SeedFinding Java libraries were last updated around 1.18 and would need extending for newer structures. Since the core algorithm hasn't changed between MC versions (just the spacing/salt parameters per structure), implementing it ourselves is simpler and more maintainable than taking on a stale dependency.
 
-The algorithm is verified against Minecraft's own `ChunkRandom.setRegionSeed()` in `ChunkRandomVerificationTest`.
+The algorithm is verified against Minecraft's own `ChunkRandom.setRegionSeed()` in `ChunkRandomVerificationTest`, and against Chunkbase's output for seed 12345 in `ChunkbaseComparisonTest` (80-100% coverage for most structure types).
 
 ### BiomeSource for biome validation
 
@@ -65,4 +69,5 @@ BlueMapAPI is a `compileOnly` dependency. The mod loads and works even if BlueMa
 
 1. **Pillager Outpost false positives** — Vanilla has a `frequency: 0.2` filter that rejects 80% of grid positions. We don't implement this, so we show ~5x too many outposts.
 2. **Surface height checks missing** — Desert Pyramids, Jungle Temples, and Mansions have height validation in vanilla (~5% false positives remain even with biome checking).
-3. **Dimension matching fragility** — The `.contains()` check on BlueMap world IDs works for vanilla but could break with custom world configs.
+3. **Nether Fortress/Bastion biome fallback gap** — Vanilla tries the other structure type when the first fails its biome check (e.g., bastion → fortress in basalt deltas). We don't implement this fallback, causing ~15-30% misattribution between the two types.
+4. **Dimension matching fragility** — The `.contains()` check on BlueMap world IDs works for vanilla but could break with custom world configs.

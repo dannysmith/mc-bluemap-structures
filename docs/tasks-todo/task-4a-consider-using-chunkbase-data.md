@@ -1,10 +1,4 @@
-# Task: Bugs and chunkbase stuff
-
-## Phase 1 - Bugs
-
-These are bugs and errors in the generation which came out of the work in task four. 
-
-## Phase 2 - Chunkbase Data
+# Task: Consider using chunkbase data
 
 A little while ago we built the tool in `tools/chunkbase-verify/` - See the readme in there for details. What this does is it uses playwright to actually open chunkbase up for the relevant seed. And given a certain radius, it gets chunkbase's estimates of the locations of these various structures and puts them in `tools/chunkbase-verify/data/` as JSON files.
 

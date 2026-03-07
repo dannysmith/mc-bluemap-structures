@@ -49,27 +49,38 @@ This is the same technique used to approximate a triangular distribution — str
 
 ### Nether Fortress and Bastion (Shared Grid)
 
-Fortress and Bastion share identical grid parameters (spacing=27, separation=4, salt=30084232). Every grid cell produces exactly one structure, with a weight roll determining which type:
+Fortress and Bastion share identical grid parameters (spacing=27, separation=4, salt=30084232). Every grid cell produces exactly one structure, with a weight roll determining which type.
+
+Since MC 1.18, the weight roll uses a **fresh RNG** seeded from the output chunk position (carver seed), not the same RNG used for position calculation:
 
 ```
-roll = rand.nextInt(5)
+// Position RNG (region seed)
+regionSeed = regionX * 341873128712 + regionZ * 132897987541 + worldSeed + salt
+chunkX/Z = computed from regionSeed RNG
+
+// Weight RNG (carver seed) — separate from position RNG
+Random(worldSeed) → a = nextLong(), b = nextLong()
+carverSeed = (a * chunkX) ^ (b * chunkZ) ^ worldSeed
+roll = new Random(carverSeed).nextInt(5)
 if roll < 2 → Nether Fortress (40%)
 else        → Bastion Remnant (60%)
 ```
 
-The weight roll uses the same RNG instance, so it's deterministic and position-dependent. This is handled by `StructureLocator.findNetherComplex()`, which iterates the shared grid once and filters by the requested type.
+This is handled by `StructureLocator.findNetherComplex()`, which iterates the shared grid once and filters by the requested type.
 
 ### Strongholds (Concentric Rings)
 
 Strongholds don't use the region grid at all. They use a concentric rings algorithm seeded directly from the world seed. See `StrongholdLocator.java`.
 
-The algorithm places 128 strongholds in expanding rings around the origin:
+**At runtime**, the mod reads pre-computed stronghold positions directly from vanilla's `StructurePlacementCalculator.getPlacementPositions()`. These positions include biome snapping (vanilla shifts geometric positions to valid biomes within a 112-block radius), so they exactly match in-game locations.
+
+**Geometric fallback** (used in tests where no `ServerWorld` is available): places 128 strongholds in expanding rings around the origin:
 - Starts with 3 strongholds in the first ring at ~2048 blocks from origin
 - Each subsequent ring has more strongholds at greater distance
 - Within each ring, strongholds are evenly spaced with a random angular offset
 - Distance from origin varies randomly within each ring
 
-Strongholds skip biome validation — their placement is purely geometric.
+The geometric fallback is ~300 blocks off from actual positions because it skips biome snapping.
 
 ## Structure Parameters
 
@@ -93,11 +104,13 @@ Each structure type in `StructureType.java` defines these values, sourced from t
 | Woodland Mansion | 80 | 20 | 10387319 | triangular |
 | Nether Fortress | 27 | 4 | 30084232 | linear |
 | Bastion Remnant | 27 | 4 | 30084232 | linear |
-| Ruined Portal (Nether) | 25 | 10 | 34222645 | linear |
+| Ruined Portal (Nether) | 40 | 15 | 34222645 | linear |
 | End City | 20 | 11 | 10387313 | triangular |
 | Stronghold | n/a | n/a | n/a | concentric_rings |
 
-These values must match the vanilla data pack for the targeted MC version. If updating to a new MC version, verify against `data/minecraft/worldgen/structure_set/` in the vanilla data pack (available at [misode/mcmeta](https://github.com/misode/mcmeta)).
+These values must match the vanilla data pack for the targeted MC version (1.21.11). If updating to a new MC version, verify against `data/minecraft/worldgen/structure_set/` in the vanilla data pack (available at [misode/mcmeta](https://github.com/misode/mcmeta) — use the version tag, not the `data` branch which tracks snapshots).
+
+Note: Ruined Portal uses the same parameters for both Overworld and Nether — vanilla has a single `ruined_portals` structure set.
 
 ## Biome Validation
 

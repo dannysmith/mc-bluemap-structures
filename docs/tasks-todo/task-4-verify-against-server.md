@@ -138,21 +138,11 @@ Desert Pyramids, Jungle Temples, Mansions have height validation in vanilla. Thi
 - **All structure params verified** against `1.21.11-data` tag — they match our `StructureType.java` (after the ruined portal nether fix)
 - Chunkbase block offsets vary by structure type (not always chunk center +8)
 
-## Phase 5: Manual in-game verification
+## Phase 5: Manual in-game verification — DONE
 
-Use the server seed extraction data (`data/chunkbase-seed--8408138640175831038.json`) for spot-checking in-game, focusing on:
-- Any structure types where Chunkbase and our algorithm agree but might both be wrong
-- Edge cases near biome boundaries
-- Validating fixes from Phase 4
+Spot-checked structures in-game on the server seed (`-8408138640175831038`). All checked structure locations are correct. Stronghold positions (previously 300+ blocks off) are now accurate after the vanilla API fix.
 
-## Notes from initial manual testing
-
-- Stronghold
-  - Our Location: -40, -1848
-  - Actual Location: 68, -1548
-- Stronghold
-  - Our Location: -1368, 840
-  - Actual Location: -1676, 916
+Earlier manual testing had found strongholds off by 300+ blocks — this was the geometric-only placement issue, now fixed by reading vanilla's pre-computed positions at runtime.
 
 ## Key files
 

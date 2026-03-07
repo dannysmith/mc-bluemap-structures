@@ -8,6 +8,7 @@ Fabric server-side mod for Minecraft 1.21.11 that adds Chunkbase-style toggleabl
 - Per-structure toggleable marker sets in the BlueMap sidebar
 - Zoom-based visibility (dense structures like shipwrecks only show when zoomed in)
 - Custom icons per structure type
+- Copyable `/tp` command in marker popups for quick in-game teleporting
 - Configurable search radius and per-structure enable/disable
 
 ## Setup
