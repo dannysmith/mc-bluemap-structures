@@ -4,6 +4,8 @@ Shows villages, temples, fortresses, and 16 other structure types as markers on 
 
 Fabric server-side mod for Minecraft 1.21.11.
 
+<img width="1917" height="951" alt="bm-structures-image" src="https://github.com/user-attachments/assets/09af2086-5005-4bea-b814-6135c4714b6e" />
+
 ## Features
 
 - Per-structure toggleable marker sets in the BlueMap sidebar
