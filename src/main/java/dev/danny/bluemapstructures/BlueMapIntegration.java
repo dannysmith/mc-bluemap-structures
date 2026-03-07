@@ -129,7 +129,7 @@ public class BlueMapIntegration {
         POIMarker.Builder builder =
             POIMarker.builder()
                 .label(label)
-                .detail(label + " (" + pos.blockX() + ", " + pos.blockZ() + ")")
+                .detail(buildDetail(label, pos.blockX(), pos.blockZ()))
                 .position((double) pos.blockX(), 64.0, (double) pos.blockZ())
                 .maxDistance(type.maxDistance);
 
@@ -230,6 +230,25 @@ public class BlueMapIntegration {
       case NETHER -> server.getWorld(World.NETHER);
       case END -> server.getWorld(World.END);
     };
+  }
+
+  private static String buildDetail(String label, int blockX, int blockZ) {
+    String tpCommand = "/tp @p " + blockX + " ~ " + blockZ;
+    return label
+        + " ("
+        + blockX
+        + ", "
+        + blockZ
+        + ")"
+        + "<br>"
+        + "<code>"
+        + tpCommand
+        + "</code> "
+        + "<button onclick=\"navigator.clipboard.writeText('"
+        + tpCommand
+        + "');this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',1500)\""
+        + " style=\"cursor:pointer;padding:2px 6px;font-size:12px\""
+        + ">Copy</button>";
   }
 
   private static boolean matchesDimension(String worldId, StructureType.Dimension dimension) {
