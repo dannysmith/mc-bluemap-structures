@@ -3,6 +3,7 @@ package dev.danny.bluemapstructures;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import net.minecraft.server.world.ServerWorld;
 
 public class StructureLocator {
 
@@ -19,8 +20,17 @@ public class StructureLocator {
 
   public static List<StructurePos> findStructures(
       StructureType type, long worldSeed, int radiusBlocks, BiomeValidator validator) {
+    return findStructures(type, worldSeed, radiusBlocks, validator, null);
+  }
+
+  public static List<StructurePos> findStructures(
+      StructureType type,
+      long worldSeed,
+      int radiusBlocks,
+      BiomeValidator validator,
+      ServerWorld world) {
     if (type == StructureType.STRONGHOLD) {
-      return StrongholdLocator.findStrongholds(worldSeed, radiusBlocks);
+      return StrongholdLocator.findStrongholds(worldSeed, radiusBlocks, world);
     }
 
     if (type == StructureType.BURIED_TREASURE) {
