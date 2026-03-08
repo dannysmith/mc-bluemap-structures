@@ -106,12 +106,42 @@ Instead of creating all markers at startup via BlueMap's marker API, we pre-comp
 - **Bounded DOM cost**: Only markers for visible tiles exist in the DOM at any time — maybe 200–500 markers regardless of total world coverage.
 - **Deterministic**: Structure positions don't change (same seed = same positions), so pre-computing tiles at startup is valid.
 
-### Open questions
+### BlueMap webapp JS globals (from reading source)
 
-- What tile size gives the best balance? (Too small = many files + many fetches. Too large = loading unnecessary markers.)
-- How do we hook into the Three.js camera? BlueMap's `MapViewer` exposes the camera, but we need to find it from our injected script's context.
-- Should we create actual BlueMap `CSS2DObject` markers from JS, or render our own DOM elements positioned via the camera projection? (The former integrates better with BlueMap's UI; the latter avoids the CSS2DRenderer traversal overhead.)
-- How do we handle BlueMap's existing marker polling? We should avoid creating markers via the Java API so they don't appear in `markers.json` — our JS-only markers would be invisible to BlueMap's marker system.
+BlueMap exposes everything we need as globals. By the time our injected script runs, the app is fully initialised.
+
+**Globals:**
+- `window.bluemap` — live `BlueMapApp` instance (camera, maps, markers, controls)
+- `window.BlueMap` — barrel re-export of every class (`MarkerSet`, `PoiMarker`, `HtmlMarker`, `Three`, etc.)
+
+**Camera access:**
+```js
+window.bluemap.mapViewer.controlsManager.position  // Vector3 look-at target (x=east, z=south)
+window.bluemap.mapViewer.controlsManager.distance   // zoom distance from look-at point
+window.bluemap.mapViewer.camera                     // Three.js PerspectiveCamera subclass
+```
+
+**Events (on `window.bluemap.events`, no polling needed):**
+- `bluemapCameraMoved` — fires on every camera change, detail: `{controlsManager, camera}`
+- `bluemapMapChanged` — fires on dimension switch, detail: `{map}`
+- `bluemapRenderFrame` — fires every rendered frame
+
+**Creating markers from JS:**
+```js
+const { MarkerSet, PoiMarker } = window.BlueMap;
+const marker = new PoiMarker("village-1");
+marker.updateFromData({ position: {x, y, z}, label, icon, detail, maxDistance, ... });
+myMarkerSet.add(marker);
+window.bluemap.mapViewer.markers.add(myMarkerSet);
+```
+
+These are first-class BlueMap markers — they appear in the sidebar, support toggling, distance fading, click labels, etc. And can be removed just as easily when they leave the viewport.
+
+**Map info:**
+```js
+window.bluemap.mapViewer.map.data.id  // current map ID, e.g. "world", "world_nether"
+window.bluemap.maps                   // all loaded Map instances
+```
 
 ## Discarded Approaches
 
@@ -119,3 +149,144 @@ Instead of creating all markers at startup via BlueMap's marker API, we pre-comp
 - **Regional marker sets**: Still loads all data into the browser. Manual region toggling is poor UX.
 - **Reduce marker data**: Marginal gains, doesn't address the O(n) per-frame problem.
 - **Wait for BlueMap webapp rewrite**: No timeline, not actionable.
+- **Custom HTTP endpoint on BlueMap's server**: No public API for route registration. Internal cast to `BlueMapAPIImpl` is possible but fragile across versions.
+- **Separate HTTP server (JDK/Netty)**: Unnecessary since static tile files served from webroot accomplish the same goal without CORS issues or a second port.
+
+---
+
+## Implementation Plan
+
+### Design Decisions
+
+**Tile size: 1024 blocks.** Each tile covers a 1024x1024 block region. At a comfortable zoom, the viewport shows ~2000x2000 blocks = roughly 4–9 tiles. With structure spacings of 20–80 chunks (320–1280 blocks), each tile contains ~1–10 markers per structure type. With 20 types enabled, that's ~50–200 markers in the viewport — well under the ~3000 threshold.
+
+**Tile coordinates:** Tile `(rx, rz)` covers block range `[rx*1024, (rx+1)*1024)`. Tile `(0,0)` = blocks 0–1023, tile `(-1,0)` = blocks -1024 to -1.
+
+**Spawn marker stays on the Java API.** It's a single marker with no performance impact — no reason to move it to the tile system.
+
+**One MarkerSet per structure type in JS.** This preserves the current UX where each structure type is independently toggleable in BlueMap's sidebar. The MarkerSets persist across tile load/unload; only individual PoiMarkers within them are added/removed as tiles come in and out of view.
+
+**Old code retained alongside new system initially.** We keep the existing `createMarkers()` code (gated behind a config flag or simply not called) until the tile system is confirmed working. Then remove in a follow-up.
+
+### File structure on disk (inside BlueMap webroot)
+
+```
+data/bluemap-structures/
+  meta.json                           # structure types, tile size, icon URLs, dimension config
+  js/bluemap-structures.js            # injected client script
+  tiles/overworld/r.0.0.json          # tile files per dimension
+  tiles/overworld/r.-1.0.json
+  tiles/nether/r.0.0.json
+  tiles/end/r.0.0.json
+  ...
+```
+
+### meta.json format
+
+```json
+{
+  "tileSize": 1024,
+  "dimensions": {
+    "overworld": {
+      "path": "data/bluemap-structures/tiles/overworld",
+      "mapIds": ["world"],
+      "tileRange": { "minX": -49, "maxX": 48, "minZ": -49, "maxZ": 48 }
+    },
+    "nether": { ... },
+    "end": { ... }
+  },
+  "structureTypes": {
+    "VILLAGE": {
+      "displayName": "Villages",
+      "iconUrl": "assets/structures/village.png",
+      "maxDistance": 5000,
+      "defaultHidden": false
+    },
+    ...
+  }
+}
+```
+
+`tileRange` tells the JS which tiles actually exist, so it doesn't 404 on empty regions.
+
+### Tile JSON format (e.g. `r.0.0.json`)
+
+```json
+[
+  { "x": 128, "z": 256, "t": "VILLAGE" },
+  { "x": 520, "z": 900, "t": "DESERT_PYRAMID" },
+  { "x": 300, "z": 100, "t": "END_CITY", "s": true }
+]
+```
+
+Kept minimal — just coordinates, type key, and optional `"s": true` for end city ships. The JS looks up display names, icons, maxDistance etc. from `meta.json`. Empty tiles can either be an empty array `[]` or a missing file (JS handles both).
+
+### Phase 1: Java-side tile generation
+
+**New class: `StructureTileWriter`**
+
+Responsibilities:
+- Accept a list of `StructurePos` per structure type (from existing `StructureLocator`)
+- Partition positions into tile buckets based on `blockX / 1024`, `blockZ / 1024`
+- Write each non-empty tile as a JSON file to `<webroot>/data/bluemap-structures/tiles/<dimension>/r.<rx>.<rz>.json`
+- Write `meta.json` with structure type metadata, tile ranges per dimension, and icon URLs
+- Copy the client JS from mod resources to `<webroot>/data/bluemap-structures/js/bluemap-structures.js`
+- Call `api.getWebApp().registerScript("data/bluemap-structures/js/bluemap-structures.js")`
+
+**Changes to `BlueMapIntegration`:**
+- Replace `createMarkers()` internals: instead of creating `POIMarker` objects, call `StructureTileWriter.writeTiles()` with the computed positions
+- Keep `createSpawnMarker()` unchanged (single marker via Java API)
+- Keep `uploadIcons()` unchanged (icons still needed — the JS references them)
+- Keep `removeMarkers()` for the spawn marker; add cleanup of tile files on disable
+
+**Changes to `ModConfig`:**
+- Increase default `radiusBlocks` to 50000 (or higher — tiles make large radii cheap to serve)
+
+### Phase 2: Client-side viewport loader (JavaScript)
+
+**New file: `bluemap-structures.js`** (in `src/main/resources/`, copied to webroot at startup)
+
+On load:
+1. Fetch `meta.json`
+2. Determine the current dimension from `bluemap.mapViewer.map.data.id` by matching against `meta.json`'s `mapIds`
+3. Create one `MarkerSet` per structure type (using display names and toggleable settings from meta.json), add to `bluemap.mapViewer.markers`
+
+Camera movement handler (`bluemapCameraMoved`):
+1. Read `controlsManager.position` (x, z) and `controlsManager.distance` (zoom)
+2. Compute a viewport rectangle in block coords (position + buffer zone based on zoom distance)
+3. Convert to tile coordinates
+4. Diff against currently-loaded tiles — determine which tiles to load, which to unload
+5. Fetch new tile JSON files (with browser caching)
+6. For each marker in a new tile: create a `PoiMarker`, call `updateFromData()` with position/icon/label/detail/maxDistance from meta.json, add to the appropriate MarkerSet
+7. For each marker in an unloaded tile: remove from its MarkerSet and dispose
+
+Map switch handler (`bluemapMapChanged`):
+1. Unload all current tiles and markers
+2. Re-determine dimension from the new map ID
+3. Reload tiles for the new dimension's viewport
+
+Debouncing:
+- Don't re-evaluate tiles on every camera event — debounce to e.g. 200ms or use a dirty flag checked on `bluemapRenderFrame`
+- Tile fetches are async; don't block rendering while loading
+
+### Phase 3: Polish and UX
+
+- **Toggle state persistence**: Save per-structure-type visibility to `localStorage` (BlueMap does this for its own marker sets, pattern: `bluemap-markerset-{id}-visible`)
+- **Error handling**: Missing tile files (404) = empty area, not an error. Log once and cache the empty result.
+- **Detail HTML**: Match the current format — label, coordinates, `/tp` command input with the existing styling
+- **Loading feedback**: Optional subtle indicator while tiles are being fetched (could skip this initially)
+
+### Phase 4: Cleanup
+
+- Remove old `createMarkers()` POIMarker code from `BlueMapIntegration` (the spawn marker code stays)
+- Remove `maxDistance` from `StructureType` enum (now defined in meta.json / JS-side)
+- Update `docs/architecture.md` to describe the tile-based system
+- Clean up the temp BlueMap clone at `/tmp/bluemap-research/`
+
+### Risk & edge cases
+
+- **Users with external webservers (nginx):** Writing to webroot still works — nginx serves the same files. No issue.
+- **BlueMap API changes:** We only use `getWebRoot()`, `registerScript()`, `getAssetStorage()`, and the MarkerSet API for spawn. All stable, public API.
+- **Buried treasure density:** Spacing=1 means potentially many markers per tile. But biome filtering limits actual density to beaches. If it's still too dense at large radii, we can use a tighter `maxDistance` in meta.json or smaller tiles for that type specifically. Monitor in testing.
+- **Script loading order:** Our script runs after BlueMap is fully loaded (scripts are injected at end of `BlueMapApp.load()`). No race condition.
+- **Tile regeneration on config change:** If the user changes `radiusBlocks` or toggles structure types in config, they need to restart the server. Same as current behavior.
