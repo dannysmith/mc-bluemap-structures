@@ -65,6 +65,22 @@ BlueMap maps are matched to Minecraft dimensions by checking if the map's world 
 
 BlueMapAPI is a `compileOnly` dependency. The mod loads and works even if BlueMap isn't installed — it just does nothing (the `BlueMapAPI.onEnable` callback never fires). No runtime dependency on BlueMap.
 
+## Marker Visibility
+
+Each structure has a `maxDistance` (BlueMap camera distance at which markers appear) and `defaultHidden` (whether the marker set is hidden in the sidebar until toggled on). All structures are currently visible by default (`defaultHidden=false`).
+
+Two maxDistance tiers based on density (measured from Chunkbase seed 12345 at r=5000):
+
+**5000 (rare, < 100 markers at r=5000) — visible when fully zoomed out:**
+Villages (61), Desert Pyramids (2), Jungle Temples (7), Swamp Huts (3), Igloos (26), Pillager Outposts (11), Ancient Cities (22), Trail Ruins (34), Ocean Monuments (32), Woodland Mansions (0), Buried Treasure (71), Strongholds (8), all Nether structures (Fortresses, Bastions, Ruined Portals), End Cities (69)
+
+**1000 (common, >= 100 markers at r=5000) — only visible when zoomed in:**
+Trial Chambers (229), Ocean Ruins (196), Shipwrecks (136), Ruined Portals OW (173)
+
+The search radius is the same for all dimensions (`config.radiusBlocks`, default 5000). Nether structures use nether-coordinate positions directly (not divided by 8).
+
+These values are defined in `StructureType.java` as enum constructor parameters.
+
 ## Known Limitations
 
 1. **Pillager Outpost false positives** — Vanilla has a `frequency: 0.2` filter that rejects 80% of grid positions. We don't implement this, so we show ~5x too many outposts.

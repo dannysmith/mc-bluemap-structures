@@ -4,33 +4,33 @@ import java.util.List;
 
 public enum StructureType {
   // Overworld - Linear spread
-  VILLAGE(34, 8, 10387312, SpreadType.LINEAR, Dimension.OVERWORLD, 1000, false),
-  DESERT_PYRAMID(32, 8, 14357617, SpreadType.LINEAR, Dimension.OVERWORLD, 1000, false),
-  JUNGLE_TEMPLE(32, 8, 14357619, SpreadType.LINEAR, Dimension.OVERWORLD, 1000, false),
-  SWAMP_HUT(32, 8, 14357620, SpreadType.LINEAR, Dimension.OVERWORLD, 1000, false),
-  IGLOO(32, 8, 14357618, SpreadType.LINEAR, Dimension.OVERWORLD, 1000, false),
-  PILLAGER_OUTPOST(32, 8, 165745296, SpreadType.LINEAR, Dimension.OVERWORLD, 1000, false),
-  ANCIENT_CITY(24, 8, 20083232, SpreadType.LINEAR, Dimension.OVERWORLD, 1500, false),
-  TRAIL_RUINS(34, 8, 83469867, SpreadType.LINEAR, Dimension.OVERWORLD, 1500, false),
-  TRIAL_CHAMBERS(34, 12, 94251327, SpreadType.LINEAR, Dimension.OVERWORLD, 1500, false),
-  OCEAN_RUIN(20, 8, 14357621, SpreadType.LINEAR, Dimension.OVERWORLD, 300, true),
-  SHIPWRECK(24, 4, 165745295, SpreadType.LINEAR, Dimension.OVERWORLD, 300, true),
-  RUINED_PORTAL_OW(40, 15, 34222645, SpreadType.LINEAR, Dimension.OVERWORLD, 800, true),
+  VILLAGE(34, 8, 10387312, SpreadType.LINEAR, Dimension.OVERWORLD, 5000, false),
+  DESERT_PYRAMID(32, 8, 14357617, SpreadType.LINEAR, Dimension.OVERWORLD, 5000, false),
+  JUNGLE_TEMPLE(32, 8, 14357619, SpreadType.LINEAR, Dimension.OVERWORLD, 5000, false),
+  SWAMP_HUT(32, 8, 14357620, SpreadType.LINEAR, Dimension.OVERWORLD, 5000, false),
+  IGLOO(32, 8, 14357618, SpreadType.LINEAR, Dimension.OVERWORLD, 5000, false),
+  PILLAGER_OUTPOST(32, 8, 165745296, SpreadType.LINEAR, Dimension.OVERWORLD, 5000, false),
+  ANCIENT_CITY(24, 8, 20083232, SpreadType.LINEAR, Dimension.OVERWORLD, 5000, false),
+  TRAIL_RUINS(34, 8, 83469867, SpreadType.LINEAR, Dimension.OVERWORLD, 5000, false),
+  TRIAL_CHAMBERS(34, 12, 94251327, SpreadType.LINEAR, Dimension.OVERWORLD, 1000, false),
+  OCEAN_RUIN(20, 8, 14357621, SpreadType.LINEAR, Dimension.OVERWORLD, 1000, false),
+  SHIPWRECK(24, 4, 165745295, SpreadType.LINEAR, Dimension.OVERWORLD, 1000, false),
+  RUINED_PORTAL_OW(40, 15, 34222645, SpreadType.LINEAR, Dimension.OVERWORLD, 1000, false),
 
   // Overworld - Triangular spread
-  MONUMENT(32, 5, 10387313, SpreadType.TRIANGULAR, Dimension.OVERWORLD, 1000, false),
+  MONUMENT(32, 5, 10387313, SpreadType.TRIANGULAR, Dimension.OVERWORLD, 5000, false),
   MANSION(80, 20, 10387319, SpreadType.TRIANGULAR, Dimension.OVERWORLD, 5000, false),
 
   // Nether
-  FORTRESS(27, 4, 30084232, SpreadType.LINEAR, Dimension.NETHER, 1000, false),
-  BASTION(27, 4, 30084232, SpreadType.LINEAR, Dimension.NETHER, 1000, false),
-  RUINED_PORTAL_NETHER(40, 15, 34222645, SpreadType.LINEAR, Dimension.NETHER, 500, true),
+  FORTRESS(27, 4, 30084232, SpreadType.LINEAR, Dimension.NETHER, 5000, false),
+  BASTION(27, 4, 30084232, SpreadType.LINEAR, Dimension.NETHER, 5000, false),
+  RUINED_PORTAL_NETHER(40, 15, 34222645, SpreadType.LINEAR, Dimension.NETHER, 5000, false),
 
   // End
   END_CITY(20, 11, 10387313, SpreadType.TRIANGULAR, Dimension.END, 5000, false),
 
   // Special
-  BURIED_TREASURE(1, 0, 10387320, SpreadType.LINEAR, Dimension.OVERWORLD, 300, true),
+  BURIED_TREASURE(1, 0, 10387320, SpreadType.LINEAR, Dimension.OVERWORLD, 5000, false),
   STRONGHOLD(0, 0, 0, SpreadType.CONCENTRIC_RINGS, Dimension.OVERWORLD, 5000, false);
 
   public final int spacing;
