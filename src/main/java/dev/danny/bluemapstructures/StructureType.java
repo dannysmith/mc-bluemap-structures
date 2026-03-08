@@ -30,7 +30,7 @@ public enum StructureType {
   END_CITY(20, 11, 10387313, SpreadType.TRIANGULAR, Dimension.END, 5000, false),
 
   // Special
-  BURIED_TREASURE(1, 0, 10387320, SpreadType.LINEAR, Dimension.OVERWORLD, 5000, false),
+  BURIED_TREASURE(1, 0, 10387320, SpreadType.LINEAR, Dimension.OVERWORLD, 1000, false),
   STRONGHOLD(0, 0, 0, SpreadType.CONCENTRIC_RINGS, Dimension.OVERWORLD, 5000, false);
 
   public final int spacing;

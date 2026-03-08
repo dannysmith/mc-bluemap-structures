@@ -72,10 +72,10 @@ Each structure has a `maxDistance` (BlueMap camera distance at which markers app
 Two maxDistance tiers based on density (measured from Chunkbase seed 12345 at r=5000):
 
 **5000 (rare, < 100 markers at r=5000) — visible when fully zoomed out:**
-Villages (61), Desert Pyramids (2), Jungle Temples (7), Swamp Huts (3), Igloos (26), Pillager Outposts (11), Ancient Cities (22), Trail Ruins (34), Ocean Monuments (32), Woodland Mansions (0), Buried Treasure (71), Strongholds (8), all Nether structures (Fortresses, Bastions, Ruined Portals), End Cities (69)
+Villages (61), Desert Pyramids (2), Jungle Temples (7), Swamp Huts (3), Igloos (26), Pillager Outposts (11), Ancient Cities (22), Trail Ruins (34), Ocean Monuments (32), Woodland Mansions (0), Strongholds (8), all Nether structures (Fortresses, Bastions, Ruined Portals), End Cities (69)
 
-**1000 (common, >= 100 markers at r=5000) — only visible when zoomed in:**
-Trial Chambers (229), Ocean Ruins (196), Shipwrecks (136), Ruined Portals OW (173)
+**1000 (common, >= 100 markers at r=5000, or visually dense) — only visible when zoomed in:**
+Trial Chambers (229), Ocean Ruins (196), Shipwrecks (136), Ruined Portals OW (173), Buried Treasure (71)
 
 The search radius is the same for all dimensions (`config.radiusBlocks`, default 5000). Nether structures use nether-coordinate positions directly (not divided by 8).
 
