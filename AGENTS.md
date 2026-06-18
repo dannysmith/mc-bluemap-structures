@@ -47,7 +47,7 @@ src/main/resources/
 
 ```bash
 ./gradlew chiseledBuild    # build + test ALL versions, collect jars to build/libs/<ver>/
-./gradlew build            # build + test all versions (jars stay under versions/<id>/build)
+./gradlew build            # build + test all versions (jars stay under versions/<id>/build/libs/)
 ./gradlew check            # compile + tests, all versions (no JAR)
 ./gradlew test             # JUnit tests only, all versions
 ./gradlew spotlessApply    # auto-fix formatting (runs at repo root over src/)
