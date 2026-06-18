@@ -2,22 +2,29 @@
 
 ## Prerequisites
 
-- Java 21
-- No IDE-specific setup needed — the project uses Gradle wrapper
+- Java 21 (for the MC 1.21.11 target) and Java 25 (for the MC 26.2 target). The Gradle toolchain
+  with the foojay resolver auto-provisions whichever is missing.
+- No IDE-specific setup needed — the project uses the Gradle wrapper.
+
+This is a multi-version build via Stonecutter — see `multiversion.md`. One source tree builds both
+Minecraft versions; commands below act on all versions unless noted.
 
 ## Build Commands
 
 ```bash
-./gradlew build          # full pipeline: compile + format check + tests + JAR
-./gradlew check          # compile + format check + tests (no JAR)
-./gradlew test           # run JUnit tests only
-./gradlew spotlessCheck  # verify formatting only
+./gradlew chiseledBuild  # build + test every version, collect jars to build/libs/<version>/
+./gradlew build          # build + test every version (jars under versions/<id>/build/libs/)
+./gradlew check          # compile + tests, all versions (no JAR)
+./gradlew test           # run JUnit tests only, all versions
+./gradlew spotlessCheck  # verify formatting (repo-root task over src/)
 ./gradlew spotlessApply  # auto-fix formatting
 ```
 
-The built JAR is at `build/libs/bluemap-structures-<version>.jar`.
+`chiseledBuild` collects per-version jars as `build/libs/<version>/bluemap-structures-<version>+<mc>.jar`.
 
-`build` depends on `check`, which depends on both `spotlessCheck` and `test`. So running `build` always verifies formatting and runs tests before producing the JAR.
+Formatting is **not** wired into the per-version `check` (Stonecutter's shared source root conflicts
+with spotless's project-dir guard); run `spotlessApply`/`spotlessCheck` explicitly. They operate on
+`src/` from the repo root.
 
 ## Formatting
 
@@ -36,9 +43,11 @@ The formatting is non-configurable by design — google-java-format is opinionat
 ## Project Structure
 
 ```
-build.gradle              — Build config, dependencies, plugins
-gradle.properties         — Version numbers (MC, Fabric, mod version, etc.)
-settings.gradle           — Project name
+build.gradle.kts          — Per-version build config (mappings, deps, toolchain, jar tasks)
+settings.gradle.kts       — Declares the MC versions + Stonecutter/Loom plugins
+stonecutter.gradle.kts    — Root build: active version, spotless, chiseledBuild
+stonecutter.properties.toml — Per-version dependency strings + mod metadata
+gradle.properties         — Gradle JVM options only
 .editorconfig             — Editor defaults (charset, indent, whitespace)
 
 src/main/java/            — Mod source code
@@ -60,13 +69,13 @@ docs/                     — Developer documentation
 
 | Dependency | Scope | Purpose |
 |-----------|-------|---------|
-| Minecraft 1.21.11 | compile | Game classes (mapped via Yarn) |
+| Minecraft 1.21.11 / 26.2 | compile | Game classes (Mojang mappings for both) |
 | Fabric Loader | runtime | Mod loading |
 | Fabric API | runtime | Lifecycle events, registry access |
-| BlueMapAPI 2.7.2 | compileOnly | Marker creation (optional at runtime) |
+| BlueMapAPI 2.7.2 / 2.8.0 | compileOnly | Marker creation (optional at runtime) |
 | JUnit Jupiter 5.10.3 | test | Test framework |
 
-Versions are defined in `gradle.properties`.
+Per-version dependency strings are defined in `stonecutter.properties.toml`.
 
 ## Configuration
 

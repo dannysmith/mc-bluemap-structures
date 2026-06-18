@@ -10,10 +10,10 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.*;
 import java.util.function.Consumer;
+import net.minecraft.core.BlockPos;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.Level;
 
 public class BlueMapIntegration {
 
@@ -82,7 +82,7 @@ public class BlueMapIntegration {
     Map<StructureType.Dimension, BiomeValidator> validators =
         new EnumMap<>(StructureType.Dimension.class);
     for (StructureType.Dimension dim : StructureType.Dimension.values()) {
-      ServerWorld world = getServerWorld(server, dim);
+      ServerLevel world = getServerWorld(server, dim);
       if (world != null) {
         validators.put(dim, new BiomeValidator(world));
       }
@@ -102,7 +102,7 @@ public class BlueMapIntegration {
       if (!config.isEnabled(type)) continue;
 
       BiomeValidator validator = validators.get(type.dimension);
-      ServerWorld world = getServerWorld(server, type.dimension);
+      ServerLevel world = getServerWorld(server, type.dimension);
       int effectiveRadius = config.radiusBlocks;
       List<StructureLocator.StructurePos> positions =
           StructureLocator.findStructures(type, worldSeed, effectiveRadius, validator, world);
@@ -163,7 +163,7 @@ public class BlueMapIntegration {
   }
 
   private static void createSpawnMarker(BlueMapAPI api, MinecraftServer server) {
-    BlockPos spawn = server.getOverworld().getLevelProperties().getSpawnPoint().getPos();
+    BlockPos spawn = server.overworld().getLevelData().getRespawnData().pos();
 
     String iconUrl = uploadIcon(api, "/icons/spawn.png", "structures/spawn.png");
 
@@ -218,12 +218,12 @@ public class BlueMapIntegration {
     return iconUrl;
   }
 
-  private static ServerWorld getServerWorld(
+  private static ServerLevel getServerWorld(
       MinecraftServer server, StructureType.Dimension dimension) {
     return switch (dimension) {
-      case OVERWORLD -> server.getOverworld();
-      case NETHER -> server.getWorld(World.NETHER);
-      case END -> server.getWorld(World.END);
+      case OVERWORLD -> server.overworld();
+      case NETHER -> server.getLevel(Level.NETHER);
+      case END -> server.getLevel(Level.END);
     };
   }
 

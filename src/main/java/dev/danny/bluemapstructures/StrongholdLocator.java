@@ -4,11 +4,11 @@ import dev.danny.bluemapstructures.StructureLocator.StructurePos;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.structure.StructureSet;
-import net.minecraft.util.math.ChunkPos;
-import net.minecraft.world.gen.chunk.placement.ConcentricRingsStructurePlacement;
-import net.minecraft.world.gen.chunk.placement.StructurePlacementCalculator;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.chunk.ChunkGeneratorStructureState;
+import net.minecraft.world.level.levelgen.structure.StructureSet;
+import net.minecraft.world.level.levelgen.structure.placement.ConcentricRingsStructurePlacement;
 
 public class StrongholdLocator {
 
@@ -17,7 +17,7 @@ public class StrongholdLocator {
   private static final int SPREAD = 3;
 
   public static List<StructurePos> findStrongholds(
-      long worldSeed, int radiusBlocks, ServerWorld world) {
+      long worldSeed, int radiusBlocks, ServerLevel world) {
     if (world != null) {
       List<StructurePos> vanillaPositions = readVanillaPositions(world, radiusBlocks);
       if (vanillaPositions != null) {
@@ -31,20 +31,19 @@ public class StrongholdLocator {
    * Reads pre-computed stronghold positions from vanilla's StructurePlacementCalculator. These
    * positions include biome snapping, so they're accurate to the actual in-game locations.
    */
-  private static List<StructurePos> readVanillaPositions(ServerWorld world, int radiusBlocks) {
+  private static List<StructurePos> readVanillaPositions(ServerLevel world, int radiusBlocks) {
     try {
-      StructurePlacementCalculator calculator =
-          world.getChunkManager().getStructurePlacementCalculator();
+      ChunkGeneratorStructureState calculator = world.getChunkSource().getGeneratorState();
 
-      for (var setEntry : calculator.getStructureSets()) {
+      for (var setEntry : calculator.possibleStructureSets()) {
         StructureSet set = setEntry.value();
         if (set.placement() instanceof ConcentricRingsStructurePlacement concentric) {
-          List<ChunkPos> chunks = calculator.getPlacementPositions(concentric);
+          List<ChunkPos> chunks = calculator.getRingPositionsFor(concentric);
           List<StructurePos> results = new ArrayList<>();
 
           for (ChunkPos chunk : chunks) {
-            int blockX = chunk.getStartX() + 8;
-            int blockZ = chunk.getStartZ() + 8;
+            int blockX = chunk.getMinBlockX() + 8;
+            int blockZ = chunk.getMinBlockZ() + 8;
             if (Math.abs(blockX) <= radiusBlocks && Math.abs(blockZ) <= radiusBlocks) {
               results.add(new StructurePos(blockX, blockZ, StructureType.STRONGHOLD));
             }

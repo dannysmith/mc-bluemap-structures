@@ -2,9 +2,9 @@ package dev.danny.bluemapstructures;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import net.minecraft.util.math.random.CheckedRandom;
-import net.minecraft.util.math.random.ChunkRandom;
-import net.minecraft.world.gen.chunk.placement.SpreadType;
+import net.minecraft.world.level.levelgen.LegacyRandomSource;
+import net.minecraft.world.level.levelgen.WorldgenRandom;
+import net.minecraft.world.level.levelgen.structure.placement.RandomSpreadType;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
@@ -46,10 +46,10 @@ class ChunkRandomVerificationTest {
     int ourChunkZ = rz * spacing + ourRand.nextInt(range);
 
     // Minecraft's algorithm
-    ChunkRandom mcRand = new ChunkRandom(new CheckedRandom(0L));
-    mcRand.setRegionSeed(SEED, rx, rz, salt);
-    int mcChunkX = rx * spacing + SpreadType.LINEAR.get(mcRand, range);
-    int mcChunkZ = rz * spacing + SpreadType.LINEAR.get(mcRand, range);
+    WorldgenRandom mcRand = new WorldgenRandom(new LegacyRandomSource(0L));
+    mcRand.setLargeFeatureWithSalt(SEED, rx, rz, salt);
+    int mcChunkX = rx * spacing + RandomSpreadType.LINEAR.evaluate(mcRand, range);
+    int mcChunkZ = rz * spacing + RandomSpreadType.LINEAR.evaluate(mcRand, range);
 
     assertEquals(mcChunkX, ourChunkX, "ChunkX mismatch at region (" + rx + "," + rz + ")");
     assertEquals(mcChunkZ, ourChunkZ, "ChunkZ mismatch at region (" + rx + "," + rz + ")");
