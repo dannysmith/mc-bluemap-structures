@@ -3,7 +3,7 @@ package dev.danny.bluemapstructures;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
-import net.minecraft.server.world.ServerWorld;
+import net.minecraft.server.level.ServerLevel;
 
 public class StructureLocator {
 
@@ -28,7 +28,7 @@ public class StructureLocator {
       long worldSeed,
       int radiusBlocks,
       BiomeValidator validator,
-      ServerWorld world) {
+      ServerLevel world) {
     if (type == StructureType.STRONGHOLD) {
       return StrongholdLocator.findStrongholds(worldSeed, radiusBlocks, world);
     }

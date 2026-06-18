@@ -4,7 +4,9 @@ See @docs/tasks.md for task management
 
 ## Project
 
-Fabric server-side mod (Java 21, MC 1.21.11) adding structure markers to BlueMap. No external structure-finding libs — we implement the seed-based position algorithm directly.
+Fabric server-side mod adding structure markers to BlueMap. No external structure-finding libs — we implement the seed-based position algorithm directly.
+
+Multi-version via [Stonecutter](https://stonecutter.kikugie.dev): one source tree builds two targets — **MC 1.21.11** (Java 21) and **MC 26.2** (Java 25). Both compile against **Mojang mappings** (Yarn was discontinued from 26.1, the first unobfuscated release), so the source is written once in Mojmap names and `loomx.applyMojangMappings()` covers every version. See `docs/multiversion.md`.
 
 ## Documentation
 
@@ -12,6 +14,7 @@ Detailed docs are in `docs/`. Read the relevant doc before working on that area:
 
 - `docs/architecture.md` — Mod structure, data flow, design decisions
 - `docs/structure-algorithm.md` — Position algorithm, region seeds, spread types, parameter table
+- `docs/multiversion.md` — Stonecutter setup, Mojmap, adding/dropping MC versions
 - `docs/testing.md` — How to run/add tests, MC classpath in tests
 - `docs/dev-setup.md` — Build commands, formatting, project structure
 
@@ -43,11 +46,18 @@ src/main/resources/
 ## Build & Test
 
 ```bash
-./gradlew build            # compile + format check + tests + JAR
-./gradlew check            # compile + format check + tests (no JAR)
-./gradlew test             # JUnit tests only
-./gradlew spotlessApply    # auto-fix formatting
+./gradlew chiseledBuild    # build + test ALL versions, collect jars to build/libs/<ver>/
+./gradlew build            # build + test all versions (jars stay under versions/<id>/build)
+./gradlew check            # compile + tests, all versions (no JAR)
+./gradlew test             # JUnit tests only, all versions
+./gradlew spotlessApply    # auto-fix formatting (runs at repo root over src/)
+./gradlew spotlessCheck    # verify formatting
 ```
+
+The "active" version (set in `stonecutter.gradle.kts`, default `1.21.11`) is what the IDE
+type-checks. Switch with the generated `Set active project to <ver>` Gradle task. Run the
+`Reset active project` task before committing. Per-version dependency strings live in
+`stonecutter.properties.toml`.
 
 ## Known Limitations
 
@@ -57,7 +67,10 @@ src/main/resources/
 
 ## Dependencies
 
-- Fabric API, Fabric Loader 0.18+
-- BlueMapAPI 2.7.2 (`compileOnly` — mod works without BlueMap, just does nothing)
-- Minecraft 1.21.11, Yarn mappings, Java 21
+Per-version strings are in `stonecutter.properties.toml`; shared tooling in `build.gradle.kts` / `settings.gradle.kts`.
+
+- Stonecutter 0.9.6 + `loom-back-compat` 0.3 (Fabric Loom 1.17), Gradle 9.5.1
+- Fabric Loader 0.19.3; Fabric API `0.141.4+1.21.11` / `0.152.2+26.2`
+- BlueMapAPI `compileOnly` — coordinates differ by line: `de.bluecolored.bluemap:BlueMapAPI:2.7.2` (1.21.11) vs `de.bluecolored:bluemap-api:2.8.0` (26.2). Mod works without BlueMap, just does nothing.
+- Minecraft 1.21.11 (Java 21) and 26.2 (Java 25), **Mojang mappings** for both
 - JUnit Jupiter 5.10.3 (test only)

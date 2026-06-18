@@ -3,14 +3,14 @@ package dev.danny.bluemapstructures;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
-import net.minecraft.registry.RegistryKeys;
-import net.minecraft.registry.entry.RegistryEntry;
-import net.minecraft.registry.tag.TagKey;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.Identifier;
-import net.minecraft.world.biome.Biome;
-import net.minecraft.world.biome.source.BiomeSource;
-import net.minecraft.world.biome.source.util.MultiNoiseUtil;
+import net.minecraft.core.Holder;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.Identifier;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.tags.TagKey;
+import net.minecraft.world.level.biome.Biome;
+import net.minecraft.world.level.biome.BiomeSource;
+import net.minecraft.world.level.biome.Climate;
 
 /**
  * Validates structure positions against biome requirements using the world's BiomeSource. Uses the
@@ -20,20 +20,23 @@ import net.minecraft.world.biome.source.util.MultiNoiseUtil;
 public class BiomeValidator {
 
   private final BiomeSource biomeSource;
-  private final MultiNoiseUtil.MultiNoiseSampler noiseSampler;
+  private final Climate.Sampler noiseSampler;
   private final Map<StructureType, List<TagKey<Biome>>> tagCache;
 
-  public BiomeValidator(ServerWorld world) {
-    var chunkManager = world.getChunkManager();
-    this.biomeSource = chunkManager.getChunkGenerator().getBiomeSource();
-    this.noiseSampler = chunkManager.getNoiseConfig().getMultiNoiseSampler();
+  public BiomeValidator(ServerLevel world) {
+    var chunkSource = world.getChunkSource();
+    this.biomeSource = chunkSource.getGenerator().getBiomeSource();
+    this.noiseSampler = chunkSource.randomState().sampler();
 
     // Pre-build TagKey objects for each structure type
     this.tagCache = new EnumMap<>(StructureType.class);
     for (StructureType type : StructureType.values()) {
       List<TagKey<Biome>> tags =
           type.biomeTagIds().stream()
-              .map(id -> TagKey.of(RegistryKeys.BIOME, Identifier.of("minecraft", id)))
+              .map(
+                  id ->
+                      TagKey.create(
+                          Registries.BIOME, Identifier.fromNamespaceAndPath("minecraft", id)))
               .toList();
       tagCache.put(type, tags);
     }
@@ -46,11 +49,11 @@ public class BiomeValidator {
     }
 
     // Biome coordinates are block coordinates >> 2 (4x4 block grid)
-    RegistryEntry<Biome> biome =
-        biomeSource.getBiome(blockX >> 2, 64 >> 2, blockZ >> 2, noiseSampler);
+    Holder<Biome> biome =
+        biomeSource.getNoiseBiome(blockX >> 2, 64 >> 2, blockZ >> 2, noiseSampler);
 
     for (TagKey<Biome> tag : tags) {
-      if (biome.isIn(tag)) {
+      if (biome.is(tag)) {
         return true;
       }
     }

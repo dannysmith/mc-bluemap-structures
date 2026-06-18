@@ -17,7 +17,7 @@ public class BlueMapStructuresMod implements ModInitializer {
 
     ServerLifecycleEvents.SERVER_STARTED.register(
         server -> {
-          long worldSeed = server.getOverworld().getSeed();
+          long worldSeed = server.overworld().getSeed();
           LOGGER.info("World seed: {}", worldSeed);
 
           Path configDir = FabricLoader.getInstance().getConfigDir();

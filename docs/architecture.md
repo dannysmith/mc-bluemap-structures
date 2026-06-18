@@ -61,6 +61,10 @@ The biome is sampled at Y=64 (sea level), which is a reasonable approximation fo
 
 BlueMap maps are matched to Minecraft dimensions by checking if the map's world ID string contains `"overworld"`, `"the_nether"`, or `"the_end"`. This works for vanilla setups but could misfire with custom world configurations that use non-standard naming.
 
+### Multi-version with one Mojmap source tree
+
+The mod builds for MC 1.21.11 and 26.2 from a single source tree via Stonecutter. Because Yarn was discontinued at 26.1 (the first unobfuscated release), both targets use **Mojang mappings** — the source is written once in Mojmap names and compiles unchanged for both. The structure algorithm's parameters and the mapped API surface the mod touches are identical across these versions, so no version-conditional code is currently needed. Details in `multiversion.md`.
+
 ### BlueMapAPI as compileOnly
 
 BlueMapAPI is a `compileOnly` dependency. The mod loads and works even if BlueMap isn't installed — it just does nothing (the `BlueMapAPI.onEnable` callback never fires). No runtime dependency on BlueMap.
